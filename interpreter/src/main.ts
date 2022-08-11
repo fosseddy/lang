@@ -14,7 +14,7 @@ function makeError(line: number, msg: string): void {
 }
 
 function report(line: number, where: string, msg: string): void {
-  process.stdout.write(`[line ${line}] Error ${where}: ${msg}`);
+  process.stderr.write(`[line ${line}] Error ${where}: ${msg}`);
   HAD_ERROR = true;
 }
 
