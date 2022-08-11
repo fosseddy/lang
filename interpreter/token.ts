@@ -53,10 +53,8 @@ export type Token = {
   line: number;
 }
 
-export function createToken(kind: TokenKind,
-                            lexeme: string,
-                            /*literal: ???,*/
-                            line: number): Token {
+export function createToken(kind: TokenKind, lexeme: string,
+                            /*literal: ???,*/ line: number): Token {
   return Object.create(token, {
     kind: { value: kind },
     lexeme: { value: lexeme },
