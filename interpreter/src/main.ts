@@ -3,24 +3,26 @@
 import fs from "fs/promises";
 import readline from "readline";
 
+import * as scanner from "./scanner.js";
+
 let HAD_ERROR = false;
 
 function todo(name: string): void {
   console.log(`${name}: not implemented`);
 }
 
-function makeError(line: number, msg: string): void {
+export function printError(line: number, msg: string): void {
   report(line, "", msg);
 }
 
 function report(line: number, where: string, msg: string): void {
-  process.stderr.write(`[line ${line}] Error ${where}: ${msg}`);
+  process.stderr.write(`[line ${line}] Error ${where}: ${msg}\n`);
   HAD_ERROR = true;
 }
 
 async function execFile(path: string): Promise<void> {
-  const text = await fs.readFile(path, { encoding: "utf8" });
-  exec(text);
+  const source = await fs.readFile(path, { encoding: "utf8" });
+  exec(source);
   if (HAD_ERROR) process.exit(1);
 }
 
@@ -38,8 +40,19 @@ async function execPrompt(): Promise<void> {
   }
 }
 
-function exec(_: string): void {
-  todo("exec");
+function exec(source: string): void {
+  const s: scanner.Scanner = {
+    source,
+    tokens: [],
+    start: 0,
+    current: 0,
+    line: 1
+  };
+
+  scanner.scan(s);
+  for (const t of s.tokens) {
+    console.log(t);
+  }
 }
 
 async function main() {

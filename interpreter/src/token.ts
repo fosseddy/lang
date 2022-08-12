@@ -49,28 +49,28 @@ export enum TokenKind {
 export type Token = {
   kind: TokenKind;
   lexeme: string;
-  //literal: Object;
+  literal: number|string|null;
   line: number;
 }
 
-export function createToken(kind: TokenKind, lexeme: string,
-                            /*literal: ???,*/ line: number): Token {
-  return Object.create(token, {
-    kind: { value: kind },
-    lexeme: { value: lexeme },
-    //literal: { value: literal },
-    line: { value: line }
-  });
-}
-
-const token: Token = {
-  kind: -1,
-  line: -1,
-  lexeme: "",
-  //literal: ???
-};
-
-token.toString = function(): string {
-  //return `${t.kind} ${t.lexeme} ${t.literal}`;
-  return `${this.kind} ${this.lexeme}`;
-}
+//export function createToken(kind: TokenKind, lexeme: string,
+//                            /*literal: ???,*/ line: number): Token {
+//  return Object.create(token, {
+//    kind: { value: kind },
+//    lexeme: { value: lexeme },
+//    //literal: { value: literal },
+//    line: { value: line }
+//  });
+//}
+//
+//const token: Token = {
+//  kind: -1,
+//  line: -1,
+//  lexeme: "",
+//  //literal: ???
+//};
+//
+//token.toString = function(): string {
+//  //return `${t.kind} ${t.lexeme} ${t.literal}`;
+//  return `${this.kind} ${this.lexeme}`;
+//}
