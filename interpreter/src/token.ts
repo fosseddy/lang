@@ -53,24 +53,21 @@ export type Token = {
   line: number;
 }
 
-//export function createToken(kind: TokenKind, lexeme: string,
-//                            /*literal: ???,*/ line: number): Token {
-//  return Object.create(token, {
-//    kind: { value: kind },
-//    lexeme: { value: lexeme },
-//    //literal: { value: literal },
-//    line: { value: line }
-//  });
-//}
-//
-//const token: Token = {
-//  kind: -1,
-//  line: -1,
-//  lexeme: "",
-//  //literal: ???
-//};
-//
-//token.toString = function(): string {
-//  //return `${t.kind} ${t.lexeme} ${t.literal}`;
-//  return `${this.kind} ${this.lexeme}`;
-//}
+export const keywords: Record<string, TokenKind> = {
+  and: TokenKind.And,
+  class: TokenKind.Class,
+  else: TokenKind.Else,
+  false: TokenKind.False,
+  for: TokenKind.For,
+  fun: TokenKind.Fun,
+  if: TokenKind.If,
+  nil: TokenKind.Nil,
+  or: TokenKind.Or,
+  print: TokenKind.Print,
+  return: TokenKind.Return,
+  super: TokenKind.Super,
+  this: TokenKind.This,
+  true: TokenKind.True,
+  var: TokenKind.Var,
+  while: TokenKind.While
+};

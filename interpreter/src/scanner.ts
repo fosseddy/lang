@@ -1,4 +1,4 @@
-import { Token, TokenKind } from "./token.js"
+import { Token, TokenKind, keywords } from "./token.js"
 import assert from "assert";
 import { printError } from "./main.js";
 
@@ -27,7 +27,12 @@ export function scan(s: Scanner): void {
 
 function scanToken(s: Scanner): void {
   const c = advance(s);
+
   switch(c) {
+  case " ": case "\t": case "\r": break;
+
+  case "\n": s.line++; break;
+
   case "(": addToken(s, TokenKind.LeftParen, null); break;
   case ")": addToken(s, TokenKind.RightParen, null); break;
   case "{": addToken(s, TokenKind.LeftBrace, null); break;
@@ -54,7 +59,7 @@ function scanToken(s: Scanner): void {
 
   case "/":
     if (match(s, "/")) {
-      while (peek(s) != "\n" && hasSource(s)) advance(s);
+      while (peek(s) !== "\n" && hasSource(s)) advance(s);
     } else {
       addToken(s, TokenKind.Slash, null);
     }
@@ -78,23 +83,27 @@ function scanToken(s: Scanner): void {
     addToken(s, TokenKind.String, lit);
   } break;
 
-  case "\n": s.line++; break;
-
-  case " ": case "\t": case "\r": break;
-
   default:
     if (isDigit(c)) {
-      while (isDigit(peek(s)) && hasSource(s)) advance(s);
+      while (isDigit(peek(s))) advance(s);
 
       if (peek(s) === "." && isDigit(peek2(s))) {
         // consume .
         advance(s);
-        while (isDigit(peek(s)) && hasSource(s)) advance(s);
+        while (isDigit(peek(s))) advance(s);
       }
 
       const lit = parseFloat(s.source.slice(s.start, s.current));
       addToken(s, TokenKind.Number, lit);
+    } else if (isAlpha(c)) {
+      while (isAlphaNum(peek(s))) advance(s);
 
+      const lexem = s.source.slice(s.start, s.current);
+
+      let kind = keywords[lexem];
+      if (!kind) kind = TokenKind.Identifier;
+
+      addToken(s, kind, null);
     } else {
       printError(s.line, "Unexpected character: " + c);
     }
@@ -152,6 +161,16 @@ function addToken(s: Scanner, kind: TokenKind, lit: number|string|null): void {
   });
 }
 
-function isDigit(char: string) {
+function isDigit(char: string): boolean {
   return char >= "0" && char <= "9";
+}
+
+function isAlpha(char: string): boolean {
+  return (char >= "a" && char <= "z") ||
+         (char >= "A" && char <= "Z") ||
+         char === "_"
+}
+
+function isAlphaNum(char: string): boolean {
+  return isDigit(char) || isAlpha(char);
 }
