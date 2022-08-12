@@ -60,12 +60,44 @@ function scanToken(s: Scanner): void {
     }
     break;
 
+  case '"': {
+    while (peek(s) !== '"' && hasSource(s)) {
+      if (peek(s) === "\n") s.line++;
+      advance(s);
+    }
+
+    if (!hasSource(s)) {
+      printError(s.line, "Unterminated string literal");
+      break;
+    }
+
+    // consume closing "
+    advance(s);
+
+    const lit = s.source.slice(s.start + 1, s.current - 1);
+    addToken(s, TokenKind.String, lit);
+  } break;
+
   case "\n": s.line++; break;
 
   case " ": case "\t": case "\r": break;
 
   default:
-    printError(s.line, "Unexpected character: " + c);
+    if (isDigit(c)) {
+      while (isDigit(peek(s)) && hasSource(s)) advance(s);
+
+      if (peek(s) === "." && isDigit(peek2(s))) {
+        // consume .
+        advance(s);
+        while (isDigit(peek(s)) && hasSource(s)) advance(s);
+      }
+
+      const lit = parseFloat(s.source.slice(s.start, s.current));
+      addToken(s, TokenKind.Number, lit);
+
+    } else {
+      printError(s.line, "Unexpected character: " + c);
+    }
     break;
   }
 }
@@ -102,6 +134,15 @@ function peek(s: Scanner): string {
   return c;
 }
 
+function peek2(s: Scanner): string {
+  if (s.current + 1 > s.source.length) return "\0";
+
+  const c = s.source.at(s.current + 1);
+  assert(c != undefined);
+
+  return c;
+}
+
 function addToken(s: Scanner, kind: TokenKind, lit: number|string|null): void {
   s.tokens.push({
     kind,
@@ -111,3 +152,6 @@ function addToken(s: Scanner, kind: TokenKind, lit: number|string|null): void {
   });
 }
 
+function isDigit(char: string) {
+  return char >= "0" && char <= "9";
+}
