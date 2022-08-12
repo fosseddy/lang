@@ -99,9 +99,7 @@ function scanToken(s: Scanner): void {
       while (isAlphaNum(peek(s))) advance(s);
 
       const lexem = s.source.slice(s.start, s.current);
-
-      let kind = keywords[lexem];
-      if (!kind) kind = TokenKind.Identifier;
+      const kind = keywords.get(lexem) ?? TokenKind.Identifier;
 
       addToken(s, kind, null);
     } else {

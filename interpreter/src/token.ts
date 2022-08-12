@@ -53,21 +53,21 @@ export type Token = {
   line: number;
 }
 
-export const keywords: Record<string, TokenKind> = {
-  and: TokenKind.And,
-  class: TokenKind.Class,
-  else: TokenKind.Else,
-  false: TokenKind.False,
-  for: TokenKind.For,
-  fun: TokenKind.Fun,
-  if: TokenKind.If,
-  nil: TokenKind.Nil,
-  or: TokenKind.Or,
-  print: TokenKind.Print,
-  return: TokenKind.Return,
-  super: TokenKind.Super,
-  this: TokenKind.This,
-  true: TokenKind.True,
-  var: TokenKind.Var,
-  while: TokenKind.While
-};
+export const keywords = new Map<string, TokenKind>([
+  ["and", TokenKind.And],
+  ["class", TokenKind.Class],
+  ["else", TokenKind.Else],
+  ["false", TokenKind.False],
+  ["for", TokenKind.For],
+  ["fun", TokenKind.Fun],
+  ["if", TokenKind.If],
+  ["nil", TokenKind.Nil],
+  ["or", TokenKind.Or],
+  ["print", TokenKind.Print],
+  ["return", TokenKind.Return],
+  ["super", TokenKind.Super],
+  ["this", TokenKind.This],
+  ["true", TokenKind.True],
+  ["var", TokenKind.Var],
+  ["while", TokenKind.While]
+]);
