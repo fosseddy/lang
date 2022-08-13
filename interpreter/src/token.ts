@@ -67,9 +67,9 @@ export const keywords = new Map<string, TokenKind>([
 
 export class Token {
   constructor(
-    public kind: TokenKind,
-    public lexeme: string,
-    public literal: number|string|null,
-    public line: number
+      public kind: TokenKind,
+      public lexeme: string,
+      public literal: number|string|null,
+      public line: number
   ) {}
 }

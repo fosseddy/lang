@@ -166,9 +166,9 @@ export class Scanner {
   }
 
   addToken(
-    kind: TokenKind,
-    lit: number|string|null = null,
-    lexeme: string|null = null
+      kind: TokenKind,
+      lit: number|string|null = null,
+      lexeme?: string
   ): void {
     this.tokens.push(
       new Token(
