@@ -6,12 +6,9 @@ import readline from "readline";
 import * as scanner from "./scanner.js";
 import * as parser from "./parser.js";
 import { Token, TokenKind } from "./token.js";
+import { evaluate } from "./interpreter.js";
 
 let HAD_ERROR = false;
-
-function todo(name: string): void {
-  console.log(`${name}: not implemented`);
-}
 
 export function printError(line: number, msg: string): void {
   report(line, "", msg);
@@ -19,9 +16,9 @@ export function printError(line: number, msg: string): void {
 
 export function printParserError(t: Token, msg: string): void {
   if (t.kind === TokenKind.Eof) {
-    report(t.line, " at end", msg);
+    report(t.line, "at end", msg);
   } else {
-    report(t.line, ` at '${t.lexeme}'`, msg);
+    report(t.line, `at '${t.lexeme}'`, msg);
   }
 }
 
@@ -60,17 +57,14 @@ function exec(source: string): void {
   };
 
   scanner.scan(s);
-  for (const t of s.tokens) {
-    console.log(t);
-  }
 
   const p: parser.Parser = {
-    // @NOTE(art): assing by reference
+    // @NOTE(art): assign by reference
     tokens: s.tokens,
     current: 0
   }
 
-  console.log(parser.parse(p));
+  process.stdout.write(evaluate(parser.parse(p)) + "\n");
 }
 
 async function main() {

@@ -139,7 +139,6 @@ function primary(p: Parser): Expr {
   }
 
   // @TODO(art): Proper error handling
-  console.log(p);
   printParserError(peek(p), "Expected expression.");
   assert(false);
 }

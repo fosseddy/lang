@@ -28,7 +28,7 @@ export function scan(s: Scanner): void {
 function scanToken(s: Scanner): void {
   const c = advance(s);
 
-  switch(c) {
+  switch (c) {
   case " ": case "\t": case "\r": break;
 
   case "\n": s.line++; break;

@@ -14,21 +14,21 @@ export enum ExprKind {
   Count
 }
 
-type ExprLiteral = {
+export type ExprLiteral = {
   value: number|string|boolean|null;
 }
 
-type ExprUnary = {
+export type ExprUnary = {
   right: Expr;
   operator: Token;
 }
 
-type ExprBinary = {
+export type ExprBinary = {
   left: Expr;
   right: Expr;
   operator: Token;
 }
 
-type ExprGrouping = {
+export type ExprGrouping = {
   expr: Expr;
 }
