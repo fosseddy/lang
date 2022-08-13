@@ -1,20 +1,32 @@
-import { Token, TokenKind } from "./token.js";
+import { Token } from "./token.js";
 
-type Expr = ExprLiteral|ExprUnary|ExprBinary|ExprGrouping
+export type Expr = {
+  kind: ExprKind;
+  body: ExprLiteral|ExprUnary|ExprBinary|ExprGrouping;
+}
+
+export enum ExprKind {
+  Literal = 0,
+  Unary,
+  Binary,
+  Grouping,
+
+  Count
+}
 
 type ExprLiteral = {
-  value: number|string;
+  value: number|string|boolean|null;
 }
 
 type ExprUnary = {
-  operator: Token;
   right: Expr;
+  operator: Token;
 }
 
 type ExprBinary = {
   left: Expr;
-  operator: Token;
   right: Expr;
+  operator: Token;
 }
 
 type ExprGrouping = {

@@ -4,6 +4,8 @@ import fs from "fs/promises";
 import readline from "readline";
 
 import * as scanner from "./scanner.js";
+import * as parser from "./parser.js";
+import { Token, TokenKind } from "./token.js";
 
 let HAD_ERROR = false;
 
@@ -13,6 +15,14 @@ function todo(name: string): void {
 
 export function printError(line: number, msg: string): void {
   report(line, "", msg);
+}
+
+export function printParserError(t: Token, msg: string): void {
+  if (t.kind === TokenKind.Eof) {
+    report(t.line, " at end", msg);
+  } else {
+    report(t.line, ` at '${t.lexeme}'`, msg);
+  }
 }
 
 function report(line: number, where: string, msg: string): void {
@@ -53,6 +63,14 @@ function exec(source: string): void {
   for (const t of s.tokens) {
     console.log(t);
   }
+
+  const p: parser.Parser = {
+    // @NOTE(art): assing by reference
+    tokens: s.tokens,
+    current: 0
+  }
+
+  console.log(parser.parse(p));
 }
 
 async function main() {
