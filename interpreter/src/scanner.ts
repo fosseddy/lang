@@ -1,174 +1,196 @@
-import { Token, TokenKind, keywords } from "./token.js"
 import assert from "assert";
+import { Token, TokenKind, keywords } from "./token.js"
 import { printError } from "./main.js";
 
-export type Scanner = {
+type Char = string;
+
+export class Scanner {
+  tokens: Token[] = [];
+  start = 0;
+  current = 0;
+  line = 1;
+
   source: string;
-  tokens: Token[];
 
-  start: number;
-  current: number;
-  line: number;
-}
-
-export function scan(s: Scanner): void {
-  while (hasSource(s)) {
-    s.start = s.current;
-    scanToken(s);
+  constructor(s: string) {
+    this.source = s;
   }
 
-  s.tokens.push({
-    kind: TokenKind.Eof,
-    lexeme: "",
-    literal: null,
-    line: s.line
-  });
-}
+  scan(): Token[] {
+    while (this.hasSource()) {
+      this.start = this.current;
 
-function scanToken(s: Scanner): void {
-  const c = advance(s);
+      const c = this.advance();
 
-  switch (c) {
-  case " ": case "\t": case "\r": break;
+      switch (c) {
+      case " ": case "\t": case "\r": break;
+      case "\n": this.line++; break;
 
-  case "\n": s.line++; break;
+      case "(": this.addToken(TokenKind.LeftParen); break;
+      case ")": this.addToken(TokenKind.RightParen); break;
+      case "{": this.addToken(TokenKind.LeftBrace); break;
+      case "}": this.addToken(TokenKind.RightBrace); break;
+      case ",": this.addToken(TokenKind.Comma); break;
+      case ".": this.addToken(TokenKind.Dot); break;
+      case "-": this.addToken(TokenKind.Minus); break;
+      case "+": this.addToken(TokenKind.Plus); break;
+      case ";": this.addToken(TokenKind.Semicolon); break;
+      case "*": this.addToken(TokenKind.Star); break;
 
-  case "(": addToken(s, TokenKind.LeftParen, null); break;
-  case ")": addToken(s, TokenKind.RightParen, null); break;
-  case "{": addToken(s, TokenKind.LeftBrace, null); break;
-  case "}": addToken(s, TokenKind.RightBrace, null); break;
-  case ",": addToken(s, TokenKind.Comma, null); break;
-  case ".": addToken(s, TokenKind.Dot, null); break;
-  case "-": addToken(s, TokenKind.Minus, null); break;
-  case "+": addToken(s, TokenKind.Plus, null); break;
-  case ";": addToken(s, TokenKind.Semicolon, null); break;
-  case "*": addToken(s, TokenKind.Star, null); break;
+      case "!":
+        if (this.next("=")) {
+          this.advance();
+          this.addToken(TokenKind.BangEqual);
+        } else {
+          this.addToken(TokenKind.Bang);
+        }
+        break;
+      case "=":
+        if (this.next("=")) {
+          this.advance();
+          this.addToken(TokenKind.EqualEqual);
+        } else {
+          this.addToken(TokenKind.Equal);
+        }
+        break;
+      case "<":
+        if (this.next("=")) {
+          this.advance();
+          this.addToken(TokenKind.LessEqual);
+        } else {
+          this.addToken(TokenKind.Less);
+        }
+        break;
+      case ">":
+        if (this.next("=")) {
+          this.advance();
+          this.addToken(TokenKind.GreateEqual);
+        } else {
+          this.addToken(TokenKind.Greater);
+        }
+        break;
 
-  case "!":
-    addToken(s, match(s, "=") ? TokenKind.BangEqual : TokenKind.Bang, null);
-    break;
-  case "=":
-    addToken(s, match(s, "=") ? TokenKind.EqualEqual : TokenKind.Equal, null);
-    break;
-  case "<":
-    addToken(s, match(s, "=") ? TokenKind.LessEqual : TokenKind.Less, null);
-    break;
-  case ">":
-    addToken(s, match(s, "=") ? TokenKind.GreateEqual : TokenKind.Greater, null);
-    break;
+      case "/":
+        if (this.next("/")) {
+          // consume comment
+          while (!this.next("\n") && this.hasSource()) this.advance();
+        } else {
+          this.addToken(TokenKind.Slash);
+        }
+        break;
 
-  case "/":
-    if (match(s, "/")) {
-      while (peek(s) !== "\n" && hasSource(s)) advance(s);
-    } else {
-      addToken(s, TokenKind.Slash, null);
-    }
-    break;
+      case '"': {
+        while (!this.next('"') && this.hasSource()) {
+          if (this.next("\n")) this.line++;
+          this.advance();
+        }
 
-  case '"': {
-    while (peek(s) !== '"' && hasSource(s)) {
-      if (peek(s) === "\n") s.line++;
-      advance(s);
-    }
+        if (!this.hasSource()) {
+          printError(this.line, "Unterminated string literal");
+          break;
+        }
 
-    if (!hasSource(s)) {
-      printError(s.line, "Unterminated string literal");
-      break;
-    }
+        // consume closing "
+        this.advance();
 
-    // consume closing "
-    advance(s);
+        const lit = this.source.slice(this.start + 1, this.current - 1);
+        this.addToken(TokenKind.String, lit);
+      } break;
 
-    const lit = s.source.slice(s.start + 1, s.current - 1);
-    addToken(s, TokenKind.String, lit);
-  } break;
+      default:
+        if (isDigit(c)) {
+          while (isDigit(this.peek())) this.advance();
 
-  default:
-    if (isDigit(c)) {
-      while (isDigit(peek(s))) advance(s);
+          if (this.next(".") && isDigit(this.peek2())) {
+            // consume .
+            this.advance();
+            while (isDigit(this.peek())) this.advance();
+          }
 
-      if (peek(s) === "." && isDigit(peek2(s))) {
-        // consume .
-        advance(s);
-        while (isDigit(peek(s))) advance(s);
+          const lit = Number(this.source.slice(this.start, this.current));
+          assert(!isNaN(lit));
+
+          this.addToken(TokenKind.Number, lit);
+        } else if (isAlpha(c)) {
+          while (isAlphaNum(this.peek())) this.advance();
+
+          const lexem = this.source.slice(this.start, this.current);
+          const kind = keywords.get(lexem) ?? TokenKind.Identifier;
+
+          this.addToken(kind);
+        } else {
+          printError(this.line, "Unexpected character: " + c);
+        }
+        break;
       }
-
-      const lit = parseFloat(s.source.slice(s.start, s.current));
-      addToken(s, TokenKind.Number, lit);
-    } else if (isAlpha(c)) {
-      while (isAlphaNum(peek(s))) advance(s);
-
-      const lexem = s.source.slice(s.start, s.current);
-      const kind = keywords.get(lexem) ?? TokenKind.Identifier;
-
-      addToken(s, kind, null);
-    } else {
-      printError(s.line, "Unexpected character: " + c);
     }
-    break;
+
+    this.addToken(TokenKind.Eof, null, "");
+
+    return this.tokens;
+  }
+
+  hasSource(): boolean {
+    return this.current < this.source.length;
+  }
+
+  advance(): Char {
+    const c = this.source.at(this.current++);
+    assert(c != undefined);
+
+    return c;
+  }
+
+  next(c: Char): boolean {
+    if (!this.hasSource()) return false;
+
+    return this.peek() === c;
+  }
+
+  peek(): Char {
+    if (!this.hasSource()) return "\0";
+
+    const c = this.source.at(this.current);
+    assert(c != undefined);
+
+    return c;
+  }
+
+  peek2(): Char {
+    if (this.current + 1 > this.source.length) return "\0";
+
+    const c = this.source.at(this.current + 1);
+    assert(c != undefined);
+
+    return c;
+  }
+
+  addToken(
+    kind: TokenKind,
+    lit: number|string|null = null,
+    lexeme: string|null = null
+  ): void {
+    this.tokens.push(
+      new Token(
+        kind,
+        lexeme ?? this.source.slice(this.start, this.current),
+        lit,
+        this.line
+      )
+    );
   }
 }
 
-function hasSource(s: Scanner): boolean {
-  return s.current < s.source.length;
+function isDigit(c: Char): boolean {
+  return c >= "0" && c <= "9";
 }
 
-function advance(s: Scanner): string {
-  const c = s.source.at(s.current++);
-  assert(c != undefined);
-
-  return c;
+function isAlpha(c: Char): boolean {
+  return (c >= "a" && c <= "z") ||
+         (c >= "A" && c <= "Z") ||
+         c === "_"
 }
 
-function match(s: Scanner, m: string): boolean {
-  if (!hasSource(s)) return false;
-
-  const c = s.source.at(s.current);
-  assert(c != undefined);
-
-  if (c !== m) return false;
-
-  s.current++;
-  return true;
-}
-
-function peek(s: Scanner): string {
-  if (!hasSource(s)) return "\0";
-
-  const c = s.source.at(s.current);
-  assert(c != undefined);
-
-  return c;
-}
-
-function peek2(s: Scanner): string {
-  if (s.current + 1 > s.source.length) return "\0";
-
-  const c = s.source.at(s.current + 1);
-  assert(c != undefined);
-
-  return c;
-}
-
-function addToken(s: Scanner, kind: TokenKind, lit: number|string|null): void {
-  s.tokens.push({
-    kind,
-    line: s.line,
-    literal: lit,
-    lexeme: s.source.slice(s.start, s.current)
-  });
-}
-
-function isDigit(char: string): boolean {
-  return char >= "0" && char <= "9";
-}
-
-function isAlpha(char: string): boolean {
-  return (char >= "a" && char <= "z") ||
-         (char >= "A" && char <= "Z") ||
-         char === "_"
-}
-
-function isAlphaNum(char: string): boolean {
-  return isDigit(char) || isAlpha(char);
+function isAlphaNum(c: Char): boolean {
+  return isDigit(c) || isAlpha(c);
 }

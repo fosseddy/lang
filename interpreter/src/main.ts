@@ -3,10 +3,8 @@
 import fs from "fs/promises";
 import readline from "readline";
 
-import * as scanner from "./scanner.js";
-import * as parser from "./parser.js";
+import { Scanner } from "./scanner.js";
 import { Token, TokenKind } from "./token.js";
-import { evaluate } from "./interpreter.js";
 
 let HAD_ERROR = false;
 
@@ -48,23 +46,12 @@ async function execPrompt(): Promise<void> {
 }
 
 function exec(source: string): void {
-  const s: scanner.Scanner = {
-    source,
-    tokens: [],
-    start: 0,
-    current: 0,
-    line: 1
-  };
+  const s = new Scanner(source);
+  const tokens = s.scan();
 
-  scanner.scan(s);
-
-  const p: parser.Parser = {
-    // @NOTE(art): assign by reference
-    tokens: s.tokens,
-    current: 0
+  for (const t of tokens) {
+    console.log(t);
   }
-
-  process.stdout.write(evaluate(parser.parse(p)) + "\n");
 }
 
 async function main() {
@@ -81,6 +68,6 @@ async function main() {
 }
 
 main().catch(err => {
-  process.stderr.write(err.toString() + "\n");
+  console.error(err);
   process.exit(1);
 });

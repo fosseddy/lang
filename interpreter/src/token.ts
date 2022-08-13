@@ -46,13 +46,6 @@ export enum TokenKind {
   Count
 }
 
-export type Token = {
-  kind: TokenKind;
-  lexeme: string;
-  literal: number|string|null;
-  line: number;
-}
-
 export const keywords = new Map<string, TokenKind>([
   ["and", TokenKind.And],
   ["class", TokenKind.Class],
@@ -71,3 +64,12 @@ export const keywords = new Map<string, TokenKind>([
   ["var", TokenKind.Var],
   ["while", TokenKind.While]
 ]);
+
+export class Token {
+  constructor(
+    public kind: TokenKind,
+    public lexeme: string,
+    public literal: number|string|null,
+    public line: number
+  ) {}
+}
