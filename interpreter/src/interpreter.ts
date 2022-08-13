@@ -38,12 +38,12 @@ export function evaluate(expr: ast.Expr): any {
     case TokenKind.EqualEqual: return isEqual(left, right);
     default: assert(false);
     }
-  } break;
+  }
 
   case ast.ExprKind.Grouping: {
     const body = expr.body as ast.ExprGrouping;
     return evaluate(body.expr);
-  } break;
+  }
 
   default: assert(false);
   }
