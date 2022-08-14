@@ -1,0 +1,11 @@
+var int = 5 + 1;
+var float = 2.3 - 0.2;
+var string = "hello, " + "world";
+var bool = !false;
+var no_val = nil;
+
+print "int: " + (int - 1);
+print "float: " + (float + 0.2);
+print "string: " + string;
+print "bool: " + !bool;
+print "no_val: " + no_val;
