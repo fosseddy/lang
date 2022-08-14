@@ -1,9 +1,9 @@
 import assert from "assert";
 import { Token, TokenKind } from "./token.js";
 import * as ast from "./ast.js";
-import { printParserError } from "./main.js";
+import { reportParserError } from "./main.js";
 
-export { Parser };
+export { Parser, ParserError };
 
 class Parser {
   current = 0;
@@ -19,7 +19,17 @@ class Parser {
     const ss: ast.Stmt[] = [];
 
     while (this.hasTokens()) {
-      ss.push(this.declaration());
+      try {
+        const stmt = this.declaration();
+        ss.push(stmt);
+      } catch (err) {
+        if (err instanceof ParserError) {
+          reportParserError(err);
+        } else {
+          console.error("Unknown error:", err);
+        }
+        this.synchronize();
+      }
     }
 
     return ss;
@@ -170,13 +180,32 @@ class Parser {
     }
 
     if (value === undefined) {
-      // @TODO(art): Proper error handling
-      printParserError(this.peek(), "Expected expression.");
-      assert(false);
+      throw new ParserError(this.peek(), "Expected expression.");
     }
 
     this.advance();
     return new ast.Expr(ast.ExprKind.Literal, new ast.ExprLiteral(value));
+  }
+
+  synchronize() {
+    while (this.hasTokens()) {
+      const prev = this.advance();
+
+      if (prev.kind === TokenKind.Semicolon) return;
+
+      if (
+        this.next(
+          TokenKind.Class,
+          TokenKind.Fun,
+          TokenKind.Var,
+          TokenKind.For,
+          TokenKind.If,
+          TokenKind.While,
+          TokenKind.Print,
+          TokenKind.Return
+        )
+      ) return;
+    }
   }
 
   hasTokens(): boolean {
@@ -204,13 +233,20 @@ class Parser {
     return false;
   }
 
-  consume(tk: TokenKind, errorMsg: string): Token {
+  consume(tk: TokenKind, errMsg: string): Token {
     if (!this.next(tk)) {
-      // @TODO(art): Proper error handling
-      printParserError(this.peek(), errorMsg);
-      assert(false);
+      throw new ParserError(this.peek(), errMsg);
     }
 
     return this.advance();
+  }
+}
+
+class ParserError extends Error {
+  token: Token;
+
+  constructor(t: Token, msg: string) {
+    super(msg);
+    this.token = t;
   }
 }

@@ -1,6 +1,6 @@
 import assert from "assert";
 import { Token, TokenKind, keywords } from "./token.js"
-import { printError } from "./main.js";
+import { reportScannerError } from "./main.js";
 
 export { Scanner };
 
@@ -88,7 +88,7 @@ class Scanner {
         }
 
         if (!this.hasSource()) {
-          printError(this.line, "Unterminated string literal");
+          reportScannerError(this.line, "Unterminated string literal");
           break;
         }
 
@@ -121,7 +121,7 @@ class Scanner {
 
           this.addToken(kind);
         } else {
-          printError(this.line, "Unexpected character: " + c);
+          reportScannerError(this.line, `Unexpected character: '${c}'`);
         }
         break;
       }

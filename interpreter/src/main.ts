@@ -3,23 +3,24 @@
 import fs from "fs/promises";
 import readline from "readline";
 import { Scanner } from "./scanner.js";
-import { Parser } from "./parser.js";
+import { Parser, ParserError } from "./parser.js";
 import { Token, TokenKind } from "./token.js";
 import { execute } from "./evaluator.js";
 
-export { printError, printParserError };
+export { reportScannerError, reportParserError };
 
+// ERROR @TODO(art): move it somewhere?
 let HAD_ERROR = false;
 
-function printError(line: number, msg: string): void {
+function reportScannerError(line: number, msg: string): void {
   report(line, "", msg);
 }
 
-function printParserError(t: Token, msg: string): void {
-  if (t.kind === TokenKind.Eof) {
-    report(t.line, "at end", msg);
+function reportParserError(e: ParserError): void {
+  if (e.token.kind === TokenKind.Eof) {
+    report(e.token.line, "at end", e.message);
   } else {
-    report(t.line, `at '${t.lexeme}'`, msg);
+    report(e.token.line, `at '${e.token.lexeme}'`, e.message);
   }
 }
 
@@ -27,6 +28,7 @@ function report(line: number, where: string, msg: string): void {
   process.stderr.write(`[line ${line}] Error ${where}: ${msg}\n`);
   HAD_ERROR = true;
 }
+// ERROR END
 
 async function execFile(path: string): Promise<void> {
   const source = await fs.readFile(path, { encoding: "utf8" });
