@@ -2,7 +2,9 @@ import assert from "assert";
 import * as ast from "./ast.js";
 import { TokenKind } from "./token.js";
 
-export function evaluate(expr: ast.Expr): any {
+export { evaluate };
+
+function evaluate(expr: ast.Expr): any {
   switch (expr.kind) {
   case ast.ExprKind.Literal: {
     const body = expr.body as ast.ExprLiteral;

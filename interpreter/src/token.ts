@@ -1,4 +1,6 @@
-export enum TokenKind {
+export { Token, TokenKind, keywords };
+
+enum TokenKind {
   LeftParen = 0,
   RightParen,
   LeftBrace,
@@ -46,7 +48,7 @@ export enum TokenKind {
   Count
 }
 
-export const keywords = new Map<string, TokenKind>([
+const keywords = new Map<string, TokenKind>([
   ["and", TokenKind.And],
   ["class", TokenKind.Class],
   ["else", TokenKind.Else],
@@ -65,7 +67,7 @@ export const keywords = new Map<string, TokenKind>([
   ["while", TokenKind.While]
 ]);
 
-export class Token {
+class Token {
   constructor(
       public kind: TokenKind,
       public lexeme: string,

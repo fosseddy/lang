@@ -2,9 +2,11 @@ import assert from "assert";
 import { Token, TokenKind, keywords } from "./token.js"
 import { printError } from "./main.js";
 
+export { Scanner };
+
 type Char = string;
 
-export class Scanner {
+class Scanner {
   tokens: Token[] = [];
   start = 0;
   current = 0;

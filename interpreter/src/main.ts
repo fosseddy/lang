@@ -2,17 +2,20 @@
 
 import fs from "fs/promises";
 import readline from "readline";
-
 import { Scanner } from "./scanner.js";
+import { Parser } from "./parser.js";
 import { Token, TokenKind } from "./token.js";
+import { evaluate } from "./evaluator.js";
+
+export { printError, printParserError };
 
 let HAD_ERROR = false;
 
-export function printError(line: number, msg: string): void {
+function printError(line: number, msg: string): void {
   report(line, "", msg);
 }
 
-export function printParserError(t: Token, msg: string): void {
+function printParserError(t: Token, msg: string): void {
   if (t.kind === TokenKind.Eof) {
     report(t.line, "at end", msg);
   } else {
@@ -52,6 +55,12 @@ function exec(source: string): void {
   for (const t of tokens) {
     console.log(t);
   }
+
+  const p = new Parser(tokens);
+  const expr = p.parse();
+  console.log(expr);
+
+  console.log(evaluate(expr));
 }
 
 async function main() {
