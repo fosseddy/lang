@@ -5,7 +5,7 @@ import readline from "readline";
 import { Scanner } from "./scanner.js";
 import { Parser, ParserError } from "./parser.js";
 import { Token, TokenKind } from "./token.js";
-import { execute } from "./evaluator.js";
+import { execute } from "./interpreter.js";
 
 export { reportScannerError, reportParserError };
 
