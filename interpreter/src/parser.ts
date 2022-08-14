@@ -1,191 +1,169 @@
+// @TODO(art): Error handling
+
 import assert from "assert";
 import { Token, TokenKind } from "./token.js";
-import { Expr, ExprKind } from "./ast.js";
+import * as ast from "./ast.js";
 import { printParserError } from "./main.js";
 
-export type Parser = {
+export { Parser };
+
+class Parser {
+  current = 0;
+
   tokens: Token[];
-  current: number;
-}
 
-export function parse(p: Parser): Expr {
-  return expression(p);
-}
-
-function expression(p: Parser): Expr {
-  return equality(p);
-}
-
-function equality(p: Parser): Expr {
-  let expr: Expr = comparison(p);
-
-  while (match(p, TokenKind.BangEqual, TokenKind.EqualEqual)) {
-    const operator: Token = previous(p);
-    const right: Expr = comparison(p);
-    expr = {
-      kind: ExprKind.Binary,
-      body: {
-        left: expr,
-        right,
-        operator
-      }
-    };
+  constructor(ts: Token[]) {
+    assert(ts.length > 0);
+    this.tokens = ts;
   }
 
-  return expr;
-}
-
-function comparison(p: Parser): Expr {
-  let expr: Expr = term(p);
-
-  const { Greater, GreateEqual, Less, LessEqual } = TokenKind;
-  while (match(p, Greater, GreateEqual, Less, LessEqual)) {
-    const operator: Token = previous(p);
-    const right: Expr = term(p);
-    expr = {
-      kind: ExprKind.Binary,
-      body: {
-        left: expr,
-        right,
-        operator
-      }
-    };
+  parse(): ast.Expr {
+    return this.expression();
   }
 
-  return expr;
-}
-
-function term(p: Parser): Expr {
-  let expr: Expr = factor(p);
-
-  const { Minus, Plus } = TokenKind;
-  while (match(p, Minus, Plus)) {
-    const operator: Token = previous(p);
-    const right: Expr = factor(p);
-    expr = {
-      kind: ExprKind.Binary,
-      body: {
-        left: expr,
-        right,
-        operator
-      }
-    };
+  expression(): ast.Expr {
+    return this.equality();
   }
 
-  return expr;
-}
+  equality(): ast.Expr {
+    let expr = this.comparison();
 
-function factor(p: Parser): Expr {
-  let expr: Expr = unary(p);
-
-  const { Slash, Star } = TokenKind;
-  while (match(p, Slash, Star)) {
-    const operator: Token = previous(p);
-    const right: Expr = unary(p);
-    expr = {
-      kind: ExprKind.Binary,
-      body: {
-        left: expr,
-        right,
-        operator
-      }
-    };
-  }
-
-  return expr;
-}
-
-function unary(p: Parser): Expr {
-  const { Bang, Minus } = TokenKind;
-  while (match(p, Bang, Minus)) {
-    const operator: Token = previous(p);
-    const right: Expr = unary(p);
-    return {
-      kind: ExprKind.Unary,
-      body: { right, operator }
-    };
-  }
-
-  return primary(p);
-}
-
-function primary(p: Parser): Expr {
-  const {
-    False, True, Nil,
-    Number, String,
-    LeftParen, RightParen
-  } = TokenKind;
-
-  if (match(p, False)) {
-    return { kind: ExprKind.Literal, body: { value: false } };
-  }
-
-  if (match(p, True)) {
-    return { kind: ExprKind.Literal, body: { value: true } };
-  }
-
-  if (match(p, Nil)) {
-    return { kind: ExprKind.Literal, body: { value: null } };
-  }
-
-  if (match(p, Number, String)) {
-    return { kind: ExprKind.Literal, body: { value: previous(p).literal } };
-  }
-
-  if (match(p, LeftParen)) {
-    const expr: Expr = expression(p);
-    consume(p, RightParen, "Expect ')' after expression.");
-    return { kind: ExprKind.Grouping, body: { expr } };
-  }
-
-  // @TODO(art): Proper error handling
-  printParserError(peek(p), "Expected expression.");
-  assert(false);
-}
-
-function consume(p: Parser, kind: TokenKind, msg: string): Token {
-  if (check(p, kind)) return advance(p);
-  // @TODO(art): Proper error handling
-  printParserError(peek(p), msg);
-  assert(false);
-}
-
-function match(p: Parser, ...tokens: TokenKind[]): boolean {
-  for (const t of tokens) {
-    if (check(p, t)) {
-      advance(p);
-      return true;
+    while (this.next(TokenKind.BangEqual, TokenKind.EqualEqual)) {
+      const operator = this.advance();
+      const right = this.comparison();
+      expr = new ast.Expr(
+          ast.ExprKind.Binary,
+          new ast.ExprBinary(expr, right, operator)
+      );
     }
+
+    return expr;
   }
 
-  return false;
-}
+  comparison(): ast.Expr {
+    let expr = this.term();
 
-function previous(p: Parser): Token {
-  const t = p.tokens.at(p.current - 1);
-  assert(t != undefined);
+    const { Greater, GreateEqual, Less, LessEqual } = TokenKind;
+    while (this.next(Greater, GreateEqual, Less, LessEqual)) {
+      const operator = this.advance();
+      const right = this.term();
+      expr = new ast.Expr(
+          ast.ExprKind.Binary,
+          new ast.ExprBinary(expr, right, operator)
+      );
+    }
 
-  return t;
-}
+    return expr;
+  }
 
-function check(p: Parser, kind: TokenKind): boolean {
-  if (!hasTokens(p)) return false;
+  term(): ast.Expr {
+    let expr = this.factor();
 
-  return peek(p).kind === kind;
-}
+    while (this.next(TokenKind.Minus, TokenKind.Plus)) {
+      const operator = this.advance();
+      const right = this.factor();
+      expr = new ast.Expr(
+          ast.ExprKind.Binary,
+          new ast.ExprBinary(expr, right, operator)
+      );
+    }
 
-function peek(p: Parser): Token {
-  const t = p.tokens.at(p.current);
-  assert(t != undefined);
+    return expr;
+  }
 
-  return t;
-}
+  factor(): ast.Expr {
+    let expr = this.unary();
 
-function hasTokens(p: Parser): boolean {
-  return peek(p).kind !== TokenKind.Eof;
-}
+    while (this.next(TokenKind.Slash, TokenKind.Star)) {
+      const operator = this.advance();
+      const right = this.unary();
+      expr = new ast.Expr(
+          ast.ExprKind.Binary,
+          new ast.ExprBinary(expr, right, operator)
+      );
+    }
 
-function advance(p: Parser): Token {
-  if (hasTokens(p)) p.current++;
-  return previous(p);
+    return expr;
+  }
+
+  unary(): ast.Expr {
+    while (this.next(TokenKind.Bang, TokenKind.Minus)) {
+      const operator = this.advance();
+      const right = this.unary();
+      return new ast.Expr(
+          ast.ExprKind.Unary,
+          new ast.ExprUnary(right, operator)
+      );
+    }
+
+    return this.primary();
+  }
+
+  primary(): ast.Expr {
+    const {
+      False, True, Nil,
+      Number, String,
+      LeftParen, RightParen
+    } = TokenKind;
+
+    if (this.next(False)) {
+      this.advance();
+      return new ast.Expr(ast.ExprKind.Literal, new ast.ExprLiteral(false));
+    }
+
+    if (this.next(True)) {
+      this.advance();
+      return new ast.Expr(ast.ExprKind.Literal, new ast.ExprLiteral(true));
+    }
+
+    if (this.next(Nil)) {
+      this.advance();
+      return new ast.Expr(ast.ExprKind.Literal, new ast.ExprLiteral(null));
+    }
+
+    if (this.next(Number, String)) {
+      const value = this.advance().literal;
+      return new ast.Expr(ast.ExprKind.Literal, new ast.ExprLiteral(value));
+    }
+
+    if (this.next(LeftParen)) {
+      this.advance();
+      const expr = this.expression();
+      const tok = this.advance();
+      if (tok.kind !== RightParen) {
+        printParserError(tok, "Expect ')' after expression.");
+        assert(false);
+      }
+      return new ast.Expr(ast.ExprKind.Grouping, new ast.ExprGrouping(expr));
+    }
+
+    // @TODO(art): Proper error handling
+    printParserError(this.peek(), "Expected expression.");
+    assert(false);
+  }
+
+  hasTokens(): boolean {
+    return this.peek().kind !== TokenKind.Eof;
+  }
+
+  peek(): Token {
+    const t = this.tokens.at(this.current);
+    assert(t != undefined);
+
+    return t;
+  }
+
+  advance(): Token {
+    const t = this.peek();
+    if (this.hasTokens()) this.current++;
+    return t;
+  }
+
+  next(...tks: TokenKind[]): boolean {
+    for (const tk of tks) {
+      if (this.peek().kind === tk) return true;
+    }
+
+    return false;
+  }
 }

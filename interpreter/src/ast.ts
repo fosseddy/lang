@@ -2,11 +2,6 @@ import { Token } from "./token.js";
 
 export { Expr, ExprKind, ExprLiteral, ExprUnary, ExprBinary, ExprGrouping };
 
-type Expr = {
-  kind: ExprKind;
-  body: ExprLiteral|ExprUnary|ExprBinary|ExprGrouping;
-}
-
 enum ExprKind {
   Literal = 0,
   Unary,
@@ -16,21 +11,29 @@ enum ExprKind {
   Count
 }
 
-type ExprLiteral = {
-  value: number|string|boolean|null;
+class Expr {
+  constructor(
+      public kind: ExprKind,
+      public body: ExprLiteral|ExprUnary|ExprBinary|ExprGrouping
+  ) {}
 }
 
-type ExprUnary = {
-  right: Expr;
-  operator: Token;
+class ExprLiteral {
+  constructor(public value: number|string|boolean|null) {}
 }
 
-type ExprBinary = {
-  left: Expr;
-  right: Expr;
-  operator: Token;
+class ExprUnary {
+  constructor(public right: Expr, public operator: Token) {}
 }
 
-type ExprGrouping = {
-  expr: Expr;
+class ExprBinary {
+  constructor(
+      public left: Expr,
+      public right: Expr,
+      public operator: Token
+  ) {}
+}
+
+class ExprGrouping {
+  constructor(public expr: Expr) {}
 }
