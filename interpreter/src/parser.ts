@@ -17,8 +17,50 @@ class Parser {
     this.tokens = ts;
   }
 
-  parse(): ast.Expr {
-    return this.expression();
+  parse(): ast.Stmt[] {
+    const ss: ast.Stmt[] = [];
+
+    while (this.hasTokens()) {
+      ss.push(this.statement());
+    }
+
+    return ss;
+  }
+
+  statement(): ast.Stmt {
+    if (this.next(TokenKind.Print)) {
+      this.advance();
+      return this.stmtPrint();
+    }
+
+    return this.stmtExpr();
+  }
+
+  stmtExpr(): ast.Stmt {
+    const expr = this.expression();
+
+    const tok = this.advance();
+    if (tok.kind !== TokenKind.Semicolon) {
+      // @TODO(art): Proper error handling
+      printParserError(tok, "Expect ';' after expression.");
+      assert(false);
+    }
+
+    return new ast.Stmt(ast.StmtKind.Expr, new ast.StmtExpr(expr));
+  }
+
+  stmtPrint(): ast.Stmt {
+    const expr = this.expression();
+
+    const tok = this.advance();
+    if (tok.kind !== TokenKind.Semicolon) {
+      console.log(tok);
+      // @TODO(art): Proper error handling
+      printParserError(tok, "Expect ';' after value.");
+      assert(false);
+    }
+
+    return new ast.Stmt(ast.StmtKind.Print, new ast.StmtPrint(expr));
   }
 
   expression(): ast.Expr {

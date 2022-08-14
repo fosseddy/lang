@@ -1,6 +1,18 @@
 import { Token } from "./token.js";
 
-export { Expr, ExprKind, ExprLiteral, ExprUnary, ExprBinary, ExprGrouping };
+export {
+  Expr,
+  ExprKind,
+  ExprUnary,
+  ExprBinary,
+  ExprLiteral,
+  ExprGrouping,
+
+  Stmt,
+  StmtKind,
+  StmtExpr,
+  StmtPrint
+};
 
 enum ExprKind {
   Literal = 0,
@@ -35,5 +47,27 @@ class ExprBinary {
 }
 
 class ExprGrouping {
+  constructor(public expr: Expr) {}
+}
+
+enum StmtKind {
+  Expr = 0,
+  Print,
+
+  Count
+}
+
+class Stmt {
+  constructor(
+      public kind: StmtKind,
+      public body: StmtExpr|StmtPrint
+  ) {}
+}
+
+class StmtExpr {
+  constructor(public expr: Expr) {}
+}
+
+class StmtPrint {
   constructor(public expr: Expr) {}
 }

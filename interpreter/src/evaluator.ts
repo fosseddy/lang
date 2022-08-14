@@ -2,8 +2,28 @@ import assert from "assert";
 import * as ast from "./ast.js";
 import { TokenKind } from "./token.js";
 
-export { evaluate };
+export { execute };
 
+function execute(ss: ast.Stmt[]): void {
+  for (const s of ss) {
+    switch (s.kind) {
+    case ast.StmtKind.Expr: {
+      const body = s.body as ast.StmtExpr;
+      evaluate(body.expr);
+    } break;
+
+    case ast.StmtKind.Print: {
+      const body = s.body as ast.StmtPrint;
+      const value = evaluate(body.expr);
+      process.stdout.write(String(value) + "\n");
+    } break;
+
+    default: assert(false);
+    }
+  }
+}
+
+// @TODO(art): Typing
 function evaluate(expr: ast.Expr): any {
   switch (expr.kind) {
   case ast.ExprKind.Literal: {

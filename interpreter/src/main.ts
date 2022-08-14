@@ -5,7 +5,7 @@ import readline from "readline";
 import { Scanner } from "./scanner.js";
 import { Parser } from "./parser.js";
 import { Token, TokenKind } from "./token.js";
-import { evaluate } from "./evaluator.js";
+import { execute } from "./evaluator.js";
 
 export { printError, printParserError };
 
@@ -52,15 +52,10 @@ function exec(source: string): void {
   const s = new Scanner(source);
   const tokens = s.scan();
 
-  for (const t of tokens) {
-    console.log(t);
-  }
-
   const p = new Parser(tokens);
-  const expr = p.parse();
-  console.log(expr);
+  const stmts = p.parse();
 
-  console.log(evaluate(expr));
+  execute(stmts);
 }
 
 async function main() {
