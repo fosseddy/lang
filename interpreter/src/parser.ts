@@ -1,5 +1,3 @@
-// @TODO(art): Error handling
-
 import assert from "assert";
 import { Token, TokenKind } from "./token.js";
 import * as ast from "./ast.js";
@@ -21,10 +19,36 @@ class Parser {
     const ss: ast.Stmt[] = [];
 
     while (this.hasTokens()) {
-      ss.push(this.statement());
+      ss.push(this.declaration());
     }
 
     return ss;
+  }
+
+  declaration(): ast.Stmt {
+    if (this.next(TokenKind.Var)) {
+      this.advance();
+      return this.declVar();
+    }
+
+    return this.statement();
+  }
+
+  declVar() {
+    const name = this.consume(TokenKind.Identifier, "Expect variable name.");
+
+    let initializer: ast.Expr|null = null;
+    if (this.next(TokenKind.Equal)) {
+      this.advance();
+      initializer = this.expression();
+    }
+
+    this.consume(
+      TokenKind.Semicolon,
+      "Expect ';' after variable declaration."
+    );
+
+    return new ast.Stmt(ast.StmtKind.Var, new ast.StmtVar(name, initializer));
   }
 
   statement(): ast.Stmt {
@@ -38,28 +62,13 @@ class Parser {
 
   stmtExpr(): ast.Stmt {
     const expr = this.expression();
-
-    const tok = this.advance();
-    if (tok.kind !== TokenKind.Semicolon) {
-      // @TODO(art): Proper error handling
-      printParserError(tok, "Expect ';' after expression.");
-      assert(false);
-    }
-
+    this.consume(TokenKind.Semicolon, "Expect ';' after expression.");
     return new ast.Stmt(ast.StmtKind.Expr, new ast.StmtExpr(expr));
   }
 
   stmtPrint(): ast.Stmt {
     const expr = this.expression();
-
-    const tok = this.advance();
-    if (tok.kind !== TokenKind.Semicolon) {
-      console.log(tok);
-      // @TODO(art): Proper error handling
-      printParserError(tok, "Expect ';' after value.");
-      assert(false);
-    }
-
+    this.consume(TokenKind.Semicolon, "Expect ';' after value.");
     return new ast.Stmt(ast.StmtKind.Print, new ast.StmtPrint(expr));
   }
 
@@ -74,8 +83,8 @@ class Parser {
       const operator = this.advance();
       const right = this.comparison();
       expr = new ast.Expr(
-          ast.ExprKind.Binary,
-          new ast.ExprBinary(expr, right, operator)
+        ast.ExprKind.Binary,
+        new ast.ExprBinary(expr, right, operator)
       );
     }
 
@@ -90,8 +99,8 @@ class Parser {
       const operator = this.advance();
       const right = this.term();
       expr = new ast.Expr(
-          ast.ExprKind.Binary,
-          new ast.ExprBinary(expr, right, operator)
+        ast.ExprKind.Binary,
+        new ast.ExprBinary(expr, right, operator)
       );
     }
 
@@ -105,8 +114,8 @@ class Parser {
       const operator = this.advance();
       const right = this.factor();
       expr = new ast.Expr(
-          ast.ExprKind.Binary,
-          new ast.ExprBinary(expr, right, operator)
+        ast.ExprKind.Binary,
+        new ast.ExprBinary(expr, right, operator)
       );
     }
 
@@ -120,8 +129,8 @@ class Parser {
       const operator = this.advance();
       const right = this.unary();
       expr = new ast.Expr(
-          ast.ExprKind.Binary,
-          new ast.ExprBinary(expr, right, operator)
+        ast.ExprKind.Binary,
+        new ast.ExprBinary(expr, right, operator)
       );
     }
 
@@ -133,8 +142,8 @@ class Parser {
       const operator = this.advance();
       const right = this.unary();
       return new ast.Expr(
-          ast.ExprKind.Unary,
-          new ast.ExprUnary(right, operator)
+        ast.ExprKind.Unary,
+        new ast.ExprUnary(right, operator)
       );
     }
 
@@ -145,20 +154,17 @@ class Parser {
     if (this.next(TokenKind.LeftParen)) {
       this.advance();
       const expr = this.expression();
-      const tok = this.advance();
-      if (tok.kind !== TokenKind.RightParen) {
-        // @TODO(art): Proper error handling
-        printParserError(tok, "Expect ')' after expression.");
-        assert(false);
-      }
+      this.consume(TokenKind.RightParen, "Expect ')' after expression.");
       return new ast.Expr(ast.ExprKind.Grouping, new ast.ExprGrouping(expr));
     }
 
-    let value: number|string|boolean|null|undefined = undefined;
+    // @TODO(art): extract type ast.ts
+    let value: Token|number|string|boolean|null|undefined = undefined;
 
     if (this.next(TokenKind.False)) value = false;
     if (this.next(TokenKind.True)) value = true;
     if (this.next(TokenKind.Nil)) value = null
+    if (this.next(TokenKind.Identifier)) value = this.peek();
     if (this.next(TokenKind.Number, TokenKind.String)) {
       value = this.peek().literal;
     }
@@ -196,5 +202,15 @@ class Parser {
     }
 
     return false;
+  }
+
+  consume(tk: TokenKind, errorMsg: string): Token {
+    if (!this.next(tk)) {
+      // @TODO(art): Proper error handling
+      printParserError(this.peek(), errorMsg);
+      assert(false);
+    }
+
+    return this.advance();
   }
 }

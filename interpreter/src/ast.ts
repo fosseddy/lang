@@ -7,8 +7,10 @@ export {
   ExprBinary,
   ExprLiteral,
   ExprGrouping,
+  ExprVariable,
 
   Stmt,
+  StmtVar,
   StmtKind,
   StmtExpr,
   StmtPrint
@@ -19,6 +21,7 @@ enum ExprKind {
   Unary,
   Binary,
   Grouping,
+  Variable,
 
   Count
 }
@@ -26,12 +29,12 @@ enum ExprKind {
 class Expr {
   constructor(
       public kind: ExprKind,
-      public body: ExprLiteral|ExprUnary|ExprBinary|ExprGrouping
+      public body: ExprLiteral|ExprUnary|ExprBinary|ExprGrouping|ExprVariable
   ) {}
 }
 
 class ExprLiteral {
-  constructor(public value: number|string|boolean|null) {}
+  constructor(public value: Token|number|string|boolean|null) {}
 }
 
 class ExprUnary {
@@ -50,9 +53,14 @@ class ExprGrouping {
   constructor(public expr: Expr) {}
 }
 
+class ExprVariable {
+  constructor(public name: Token) {}
+}
+
 enum StmtKind {
   Expr = 0,
   Print,
+  Var,
 
   Count
 }
@@ -60,7 +68,7 @@ enum StmtKind {
 class Stmt {
   constructor(
       public kind: StmtKind,
-      public body: StmtExpr|StmtPrint
+      public body: StmtExpr|StmtPrint|StmtExpr|StmtVar
   ) {}
 }
 
@@ -70,4 +78,8 @@ class StmtExpr {
 
 class StmtPrint {
   constructor(public expr: Expr) {}
+}
+
+class StmtVar {
+  constructor(public name: Token, public initializer: Expr|null) {}
 }
