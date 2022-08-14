@@ -26,7 +26,8 @@ class Parser {
         if (err instanceof ParserError) {
           reportParserError(err);
         } else {
-          console.error("Unknown error:", err);
+          console.error("Unknown Parser Error:", err);
+          process.exit(1);
         }
         this.synchronize();
       }
@@ -168,23 +169,36 @@ class Parser {
       return new ast.Expr(ast.ExprKind.Grouping, new ast.ExprGrouping(expr));
     }
 
-    // @TODO(art): extract type ast.ts
-    let value: Token|number|string|boolean|null|undefined = undefined;
+    if (this.next(TokenKind.False)) {
+      this.advance();
+      return new ast.Expr(ast.ExprKind.Literal, new ast.ExprLiteral(false));
+    }
 
-    if (this.next(TokenKind.False)) value = false;
-    if (this.next(TokenKind.True)) value = true;
-    if (this.next(TokenKind.Nil)) value = null
-    if (this.next(TokenKind.Identifier)) value = this.peek();
+    if (this.next(TokenKind.True)) {
+      this.advance();
+      return new ast.Expr(ast.ExprKind.Literal, new ast.ExprLiteral(true));
+    }
+
+    if (this.next(TokenKind.Nil)) {
+      this.advance();
+      return new ast.Expr(ast.ExprKind.Literal, new ast.ExprLiteral(null));
+    }
+
     if (this.next(TokenKind.Number, TokenKind.String)) {
-      value = this.peek().literal;
+      return new ast.Expr(
+        ast.ExprKind.Literal,
+        new ast.ExprLiteral(this.advance().literal)
+      );
     }
 
-    if (value === undefined) {
-      throw new ParserError(this.peek(), "Expected expression.");
+    if (this.next(TokenKind.Identifier)) {
+      return new ast.Expr(
+        ast.ExprKind.Variable,
+        new ast.ExprVariable(this.advance())
+      );
     }
 
-    this.advance();
-    return new ast.Expr(ast.ExprKind.Literal, new ast.ExprLiteral(value));
+    throw new ParserError(this.peek(), "Expected expression.");
   }
 
   synchronize() {
