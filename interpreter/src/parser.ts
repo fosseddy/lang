@@ -100,46 +100,35 @@ class Parser {
   }
 
   primary(): ast.Expr {
-    const {
-      False, True, Nil,
-      Number, String,
-      LeftParen, RightParen
-    } = TokenKind;
-
-    if (this.next(False)) {
-      this.advance();
-      return new ast.Expr(ast.ExprKind.Literal, new ast.ExprLiteral(false));
-    }
-
-    if (this.next(True)) {
-      this.advance();
-      return new ast.Expr(ast.ExprKind.Literal, new ast.ExprLiteral(true));
-    }
-
-    if (this.next(Nil)) {
-      this.advance();
-      return new ast.Expr(ast.ExprKind.Literal, new ast.ExprLiteral(null));
-    }
-
-    if (this.next(Number, String)) {
-      const value = this.advance().literal;
-      return new ast.Expr(ast.ExprKind.Literal, new ast.ExprLiteral(value));
-    }
-
-    if (this.next(LeftParen)) {
+    if (this.next(TokenKind.LeftParen)) {
       this.advance();
       const expr = this.expression();
       const tok = this.advance();
-      if (tok.kind !== RightParen) {
+      if (tok.kind !== TokenKind.RightParen) {
+        // @TODO(art): Proper error handling
         printParserError(tok, "Expect ')' after expression.");
         assert(false);
       }
       return new ast.Expr(ast.ExprKind.Grouping, new ast.ExprGrouping(expr));
     }
 
-    // @TODO(art): Proper error handling
-    printParserError(this.peek(), "Expected expression.");
-    assert(false);
+    let value: number|string|boolean|null|undefined = undefined;
+
+    if (this.next(TokenKind.False)) value = false;
+    if (this.next(TokenKind.True)) value = true;
+    if (this.next(TokenKind.Nil)) value = null
+    if (this.next(TokenKind.Number, TokenKind.String)) {
+      value = this.peek().literal;
+    }
+
+    if (value === undefined) {
+      // @TODO(art): Proper error handling
+      printParserError(this.peek(), "Expected expression.");
+      assert(false);
+    }
+
+    this.advance();
+    return new ast.Expr(ast.ExprKind.Literal, new ast.ExprLiteral(value));
   }
 
   hasTokens(): boolean {
