@@ -1,10 +1,10 @@
 export { Token, TokenKind, keywords };
 
 enum TokenKind {
-  LeftParen = 0,
-  RightParen,
-  LeftBrace,
-  RightBrace,
+  LParen = 0,
+  RParen,
+  LBrace,
+  RBrace,
   Comma,
   Dot,
   Minus,
@@ -14,17 +14,17 @@ enum TokenKind {
   Star,
 
   Bang,
-  BangEqual,
-  Equal,
-  EqualEqual,
+  BangEq,
+  Eq,
+  EqEq,
   Greater,
-  GreateEqual,
+  GreaterEq,
   Less,
-  LessEqual,
+  LessEq,
 
-  Identifier,
-  String,
-  Number,
+  Ident,
+  Str,
+  Num,
 
   And,
   Class,
@@ -70,8 +70,8 @@ const keywords = new Map<string, TokenKind>([
 class Token {
   constructor(
       public kind: TokenKind,
-      public lexeme: string,
-      public literal: number|string|null,
+      public lex: string,
+      public lit: number|string|null,
       public line: number
   ) {}
 }

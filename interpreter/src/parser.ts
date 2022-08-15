@@ -46,10 +46,10 @@ class Parser {
   }
 
   declVar() {
-    const name = this.consume(TokenKind.Identifier, "Expect variable name.");
+    const name = this.consume(TokenKind.Ident, "Expect variable name.");
 
     let initializer: ast.Expr|null = null;
-    if (this.next(TokenKind.Equal)) {
+    if (this.next(TokenKind.Eq)) {
       this.advance();
       initializer = this.expression();
     }
@@ -90,7 +90,7 @@ class Parser {
   equality(): ast.Expr {
     let expr = this.comparison();
 
-    while (this.next(TokenKind.BangEqual, TokenKind.EqualEqual)) {
+    while (this.next(TokenKind.BangEq, TokenKind.EqEq)) {
       const operator = this.advance();
       const right = this.comparison();
       expr = new ast.Expr(
@@ -105,8 +105,8 @@ class Parser {
   comparison(): ast.Expr {
     let expr = this.term();
 
-    const { Greater, GreateEqual, Less, LessEqual } = TokenKind;
-    while (this.next(Greater, GreateEqual, Less, LessEqual)) {
+    const { Greater, GreaterEq, Less, LessEq } = TokenKind;
+    while (this.next(Greater, GreaterEq, Less, LessEq)) {
       const operator = this.advance();
       const right = this.term();
       expr = new ast.Expr(
@@ -162,39 +162,39 @@ class Parser {
   }
 
   primary(): ast.Expr {
-    if (this.next(TokenKind.LeftParen)) {
+    if (this.next(TokenKind.LParen)) {
       this.advance();
       const expr = this.expression();
-      this.consume(TokenKind.RightParen, "Expect ')' after expression.");
-      return new ast.Expr(ast.ExprKind.Grouping, new ast.ExprGrouping(expr));
+      this.consume(TokenKind.RParen, "Expect ')' after expression.");
+      return new ast.Expr(ast.ExprKind.Group, new ast.ExprGroup(expr));
     }
 
     if (this.next(TokenKind.False)) {
       this.advance();
-      return new ast.Expr(ast.ExprKind.Literal, new ast.ExprLiteral(false));
+      return new ast.Expr(ast.ExprKind.Lit, new ast.ExprLit(false));
     }
 
     if (this.next(TokenKind.True)) {
       this.advance();
-      return new ast.Expr(ast.ExprKind.Literal, new ast.ExprLiteral(true));
+      return new ast.Expr(ast.ExprKind.Lit, new ast.ExprLit(true));
     }
 
     if (this.next(TokenKind.Nil)) {
       this.advance();
-      return new ast.Expr(ast.ExprKind.Literal, new ast.ExprLiteral(null));
+      return new ast.Expr(ast.ExprKind.Lit, new ast.ExprLit(null));
     }
 
-    if (this.next(TokenKind.Number, TokenKind.String)) {
+    if (this.next(TokenKind.Num, TokenKind.Str)) {
       return new ast.Expr(
-        ast.ExprKind.Literal,
-        new ast.ExprLiteral(this.advance().literal)
+        ast.ExprKind.Lit,
+        new ast.ExprLit(this.advance().lit)
       );
     }
 
-    if (this.next(TokenKind.Identifier)) {
+    if (this.next(TokenKind.Ident)) {
       return new ast.Expr(
-        ast.ExprKind.Variable,
-        new ast.ExprVariable(this.advance())
+        ast.ExprKind.Var,
+        new ast.ExprVar(this.advance())
       );
     }
 

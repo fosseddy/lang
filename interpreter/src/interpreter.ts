@@ -43,7 +43,7 @@ class Interpreter {
       let value: Lit = null;
       if (body.initializer) value = this.evaluate(body.initializer);
 
-      this.env.define(body.name.lexeme, value);
+      this.env.define(body.name.lex, value);
     } break;
 
     default: assert(false);
@@ -53,8 +53,8 @@ class Interpreter {
   // @TODO(art): Typing
   evaluate(expr: ast.Expr): any {
     switch (expr.kind) {
-    case ast.ExprKind.Literal: {
-      const body = expr.body as ast.ExprLiteral;
+    case ast.ExprKind.Lit: {
+      const body = expr.body as ast.ExprLit;
       return body.value;
     }
 
@@ -80,22 +80,22 @@ class Interpreter {
       case TokenKind.Slash: return left / right;
       case TokenKind.Star: return left * right;
       case TokenKind.Greater: return left > right;
-      case TokenKind.GreateEqual: return left >= right;
+      case TokenKind.GreaterEq: return left >= right;
       case TokenKind.Less: return left < right;
-      case TokenKind.LessEqual: return left <= right;
-      case TokenKind.BangEqual: return !isEqual(left, right);
-      case TokenKind.EqualEqual: return isEqual(left, right);
+      case TokenKind.LessEq: return left <= right;
+      case TokenKind.BangEq: return !isEqual(left, right);
+      case TokenKind.EqEq: return isEqual(left, right);
       default: assert(false);
       }
     }
 
-    case ast.ExprKind.Grouping: {
-      const body = expr.body as ast.ExprGrouping;
+    case ast.ExprKind.Group: {
+      const body = expr.body as ast.ExprGroup;
       return this.evaluate(body.expr);
     }
 
-    case ast.ExprKind.Variable: {
-      const body = expr.body as ast.ExprVariable;
+    case ast.ExprKind.Var: {
+      const body = expr.body as ast.ExprVar;
       return this.env.get(body.name);
     }
 
@@ -114,9 +114,9 @@ class Env {
   }
 
   get(name: Token): Lit {
-    const val = this.values.get(name.lexeme);
+    const val = this.values.get(name.lex);
     if (val === undefined) {
-      throw new RuntimeError(name, `Undefined variable '${name.lexeme}'.`);
+      throw new RuntimeError(name, `Undefined variable '${name.lex}'.`);
     }
     return val;
   }

@@ -28,10 +28,10 @@ class Scanner {
       case " ": case "\t": case "\r": break;
       case "\n": this.line++; break;
 
-      case "(": this.addToken(TokenKind.LeftParen); break;
-      case ")": this.addToken(TokenKind.RightParen); break;
-      case "{": this.addToken(TokenKind.LeftBrace); break;
-      case "}": this.addToken(TokenKind.RightBrace); break;
+      case "(": this.addToken(TokenKind.LParen); break;
+      case ")": this.addToken(TokenKind.RParen); break;
+      case "{": this.addToken(TokenKind.LBrace); break;
+      case "}": this.addToken(TokenKind.RBrace); break;
       case ",": this.addToken(TokenKind.Comma); break;
       case ".": this.addToken(TokenKind.Dot); break;
       case "-": this.addToken(TokenKind.Minus); break;
@@ -42,7 +42,7 @@ class Scanner {
       case "!":
         if (this.next("=")) {
           this.advance();
-          this.addToken(TokenKind.BangEqual);
+          this.addToken(TokenKind.BangEq);
         } else {
           this.addToken(TokenKind.Bang);
         }
@@ -50,15 +50,15 @@ class Scanner {
       case "=":
         if (this.next("=")) {
           this.advance();
-          this.addToken(TokenKind.EqualEqual);
+          this.addToken(TokenKind.EqEq);
         } else {
-          this.addToken(TokenKind.Equal);
+          this.addToken(TokenKind.Eq);
         }
         break;
       case "<":
         if (this.next("=")) {
           this.advance();
-          this.addToken(TokenKind.LessEqual);
+          this.addToken(TokenKind.LessEq);
         } else {
           this.addToken(TokenKind.Less);
         }
@@ -66,7 +66,7 @@ class Scanner {
       case ">":
         if (this.next("=")) {
           this.advance();
-          this.addToken(TokenKind.GreateEqual);
+          this.addToken(TokenKind.GreaterEq);
         } else {
           this.addToken(TokenKind.Greater);
         }
@@ -96,7 +96,7 @@ class Scanner {
         this.advance();
 
         const lit = this.source.slice(this.start + 1, this.current - 1);
-        this.addToken(TokenKind.String, lit);
+        this.addToken(TokenKind.Str, lit);
       } break;
 
       default:
@@ -112,12 +112,12 @@ class Scanner {
           const lit = Number(this.source.slice(this.start, this.current));
           assert(!isNaN(lit));
 
-          this.addToken(TokenKind.Number, lit);
+          this.addToken(TokenKind.Num, lit);
         } else if (isAlpha(c)) {
           while (isAlphaNum(this.peek())) this.advance();
 
           const lexem = this.source.slice(this.start, this.current);
-          const kind = keywords.get(lexem) ?? TokenKind.Identifier;
+          const kind = keywords.get(lexem) ?? TokenKind.Ident;
 
           this.addToken(kind);
         } else {

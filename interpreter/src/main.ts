@@ -23,7 +23,7 @@ function reportParserError(e: ParserError): void {
   if (e.token.kind === TokenKind.Eof) {
     report(e.token.line, "at end", e.message);
   } else {
-    report(e.token.line, `at '${e.token.lexeme}'`, e.message);
+    report(e.token.line, `at '${e.token.lex}'`, e.message);
   }
 }
 

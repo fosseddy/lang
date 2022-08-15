@@ -5,9 +5,9 @@ export {
   ExprKind,
   ExprUnary,
   ExprBinary,
-  ExprLiteral,
-  ExprGrouping,
-  ExprVariable,
+  ExprLit,
+  ExprGroup,
+  ExprVar,
 
   Stmt,
   StmtVar,
@@ -17,11 +17,11 @@ export {
 };
 
 enum ExprKind {
-  Literal = 0,
+  Lit = 0,
   Unary,
   Binary,
-  Grouping,
-  Variable,
+  Group,
+  Var,
 
   Count
 }
@@ -29,11 +29,11 @@ enum ExprKind {
 class Expr {
   constructor(
       public kind: ExprKind,
-      public body: ExprLiteral|ExprUnary|ExprBinary|ExprGrouping|ExprVariable
+      public body: ExprLit|ExprUnary|ExprBinary|ExprGroup|ExprVar
   ) {}
 }
 
-class ExprLiteral {
+class ExprLit {
   constructor(public value: Token|number|string|boolean|null) {}
 }
 
@@ -49,11 +49,11 @@ class ExprBinary {
   ) {}
 }
 
-class ExprGrouping {
+class ExprGroup {
   constructor(public expr: Expr) {}
 }
 
-class ExprVariable {
+class ExprVar {
   constructor(public name: Token) {}
 }
 
