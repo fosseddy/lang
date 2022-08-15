@@ -1,14 +1,17 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"os"
-	"bufio"
+	"my-lang/scanner"
 )
 
-var hadError = false
-var hadRuntimeError = false
+var (
+	hadError = true
+	hadRuntimeError = false
+)
 
 func execFile(path string) {
 	src, err := os.ReadFile(path)
@@ -18,7 +21,7 @@ func execFile(path string) {
 
 	exec(string(src))
 
-	if (hadError || hadRuntimeError) {
+	if hadError || hadRuntimeError {
 		os.Exit(1)
 	}
 }
@@ -35,7 +38,11 @@ func execPromt() {
 }
 
 func exec(src string) {
-	fmt.Println(src)
+	s := scanner.NewScanner(src)
+	ts := s.Scan()
+	for _, t := range ts {
+		fmt.Println(t)
+	}
 	//const s = new Scanner(source);
 	//const p = new Parser(s.scan());
 

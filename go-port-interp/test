@@ -1,0 +1,14 @@
+(
+! = < >
+!= == <= >=
+
+// this is comment
+
+var x = 5;
+
+if (bool) {
+	print "hello, world";
+} else {
+	print x;
+}
+

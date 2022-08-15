@@ -1,3 +1,3 @@
-module github.com/markfosseddy/my-lang/interpreter
+module my-lang
 
 go 1.19
