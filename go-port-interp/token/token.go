@@ -1,5 +1,7 @@
 package token
 
+import "strconv"
+
 type Kind int
 
 const (
@@ -75,9 +77,24 @@ func Lookup(ident string) Kind {
 	return IDENT
 }
 
+func (t Token) String() string {
+	switch t.Kind {
+	case IDENT:
+		return "IDENT(" + t.Lex + ")"
+	case EOF:
+		return "EOF"
+	case STR:
+		return "STR(" + t.Lit.(string) + ")"
+	case NUM:
+		return "NUM(" + strconv.Itoa(t.Lit.(int)) + ")"
+	}
+
+	return t.Lex
+}
+
 type Token struct {
-	Kind    Kind
-	Lexeme  string
-	Literal any
-	Line    int
+	Kind Kind
+	Lex  string
+	Lit  any
+	Line int
 }

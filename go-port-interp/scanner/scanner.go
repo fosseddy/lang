@@ -7,11 +7,12 @@ import (
 )
 
 type Scanner struct {
-	tokens  []token.Token
-	src     string
-	start   int
-	current int
-	line    int
+	tokens   []token.Token
+	src      string
+	start    int
+	current  int
+	line     int
+	HadError bool
 }
 
 func NewScanner(src string) *Scanner {
@@ -31,13 +32,11 @@ func (s *Scanner) Scan() []token.Token {
 		c := s.advance()
 
 		switch c {
-		case ' ':
-		case '\t':
-		case '\r':
+		case ' ', '\t', '\r':
 			break
 
 		case '\n':
-			s.line++
+			s.line += 1
 
 		case '(':
 			s.add(token.LPAREN)
@@ -101,13 +100,13 @@ func (s *Scanner) Scan() []token.Token {
 		case '"':
 			for !s.next('"') && s.hasSource() {
 				if s.next('\n') {
-					s.line++
+					s.line += 1
 				}
 				s.advance()
 			}
 
 			if !s.hasSource() {
-				fmt.Printf("[line %v] Unterminated string literal\n", s.line)
+				s.reportError("Unterminated string literal")
 				break
 			}
 
@@ -118,7 +117,8 @@ func (s *Scanner) Scan() []token.Token {
 			s.addWithLit(token.STR, lit)
 
 		default:
-			if isDigit(c) {
+			switch {
+			case isDigit(c):
 				for isDigit(s.peek()) {
 					s.advance()
 				}
@@ -131,23 +131,28 @@ func (s *Scanner) Scan() []token.Token {
 					}
 				}
 
-				lit, err := strconv.Atoi(s.src[s.start:s.current])
-				if err != nil {
-					panic("scanner could not correctly scan the number")
+				lexeme := s.src[s.start:s.current]
+				if lit, err := strconv.Atoi(lexeme); err == nil {
+					s.addWithLit(token.NUM, lit)
+				} else {
+					panic("scanner could not correctly scan the number: " + lexeme)
 				}
-				s.addWithLit(token.NUM, lit)
-			} else if isAlpha(c) {
+
+			case isAlpha(c):
 				for isAlphaNum(s.peek()) {
 					s.advance()
 				}
 
 				kind := token.Lookup(s.src[s.start:s.current])
 				s.add(kind)
-			} else {
-				fmt.Printf("Unexpected character: %v\n", c)
+
+			default:
+				s.reportError(fmt.Sprintf("Unexpected character: '%v'", c))
 			}
 		}
 	}
+
+	s.add(token.EOF)
 
 	return s.tokens
 }
@@ -158,7 +163,7 @@ func (s *Scanner) hasSource() bool {
 
 func (s *Scanner) advance() byte {
 	c := s.src[s.current]
-	s.current++
+	s.current += 1
 
 	return c
 }
@@ -180,7 +185,7 @@ func (s *Scanner) peek() byte {
 }
 
 func (s *Scanner) peek2() byte {
-	if s.current+1 > len(s.src) {
+	if s.current+1 >= len(s.src) {
 		return '\x00'
 	}
 
@@ -192,6 +197,11 @@ func (s *Scanner) add(kind token.Kind) {
 		s.tokens,
 		token.Token{kind, s.src[s.start:s.current], nil, s.line},
 	)
+}
+
+func (s *Scanner) reportError(msg string) {
+	fmt.Printf("[line %v] Error: %v\n", s.line, msg)
+	s.HadError = true
 }
 
 func (s *Scanner) addWithLit(kind token.Kind, lit any) {

@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	hadError = true
+	hadError = false
 	hadRuntimeError = false
 )
 
@@ -42,6 +42,10 @@ func exec(src string) {
 	ts := s.Scan()
 	for _, t := range ts {
 		fmt.Println(t)
+	}
+
+	if s.HadError {
+		hadError = true
 	}
 	//const s = new Scanner(source);
 	//const p = new Parser(s.scan());
