@@ -14,7 +14,8 @@ export {
   StmtVar,
   StmtKind,
   StmtExpr,
-  StmtPrint
+  StmtPrint,
+  StmtBlock,
 };
 
 enum ExprKind {
@@ -73,6 +74,7 @@ enum StmtKind {
   Expr = 0,
   Print,
   Var,
+  Block,
 
   Count
 }
@@ -85,6 +87,7 @@ class Stmt {
         |StmtPrint
         |StmtExpr
         |StmtVar
+        |StmtBlock
   ) {}
 }
 
@@ -98,4 +101,8 @@ class StmtPrint {
 
 class StmtVar {
   constructor(public name: Token, public initializer: Expr|null) {}
+}
+
+class StmtBlock {
+  constructor(public ss: Stmt[]) {}
 }

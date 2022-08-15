@@ -68,7 +68,24 @@ class Parser {
       return this.stmtPrint();
     }
 
+    if (this.next(TokenKind.LBrace)) {
+      this.advance();
+      return new ast.Stmt(ast.StmtKind.Block, new ast.StmtBlock(this.block()));
+    }
+
     return this.stmtExpr();
+  }
+
+  block(): ast.Stmt[] {
+    const ss: ast.Stmt[] = [];
+
+    while (!this.next(TokenKind.RBrace) && this.hasTokens()) {
+      ss.push(this.declaration());
+    }
+
+    this.consume(TokenKind.RBrace, "Expect '}' after block.");
+
+    return ss;
   }
 
   stmtExpr(): ast.Stmt {

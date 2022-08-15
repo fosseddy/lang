@@ -46,6 +46,19 @@ class Interpreter {
       this.env.define(body.name.lex, value);
     } break;
 
+    case ast.StmtKind.Block: {
+      const body = s.body as ast.StmtBlock;
+      const prev = this.env;
+      try {
+        this.env = new Env(this.env);
+        for (const s of body.ss) {
+          this.execute(s);
+        }
+      } finally {
+        this.env = prev;
+      }
+    } break;
+
     default: assert(false);
     }
   }
@@ -116,24 +129,41 @@ type Lit = number|string|boolean|null
 class Env {
   values = new Map<string, Lit>();
 
+  enclosing: Env|null;
+
+  constructor(e: Env|null = null) {
+    this.enclosing = e;
+  }
+
   define(name: string, value: Lit): void {
     this.values.set(name, value);
   }
 
   get(name: Token): Lit {
     const val = this.values.get(name.lex);
-    if (val === undefined) {
-      throw new RuntimeError(name, `Undefined variable '${name.lex}'.`);
+    if (val !== undefined) {
+      return val;
     }
-    return val;
+
+    if (this.enclosing !== null) {
+      return this.enclosing.get(name);
+    }
+
+    throw new RuntimeError(name, `Undefined variable '${name.lex}'.`);
   }
 
   assign(name: Token, value: Lit): void {
-    if (!this.values.has(name.lex)) {
-      throw new RuntimeError(name, `Undefined variable '${name.lex}'.`);
+    if (this.values.has(name.lex)) {
+      this.values.set(name.lex, value);
+      return;
     }
 
-    this.values.set(name.lex, value);
+    if (this.enclosing !== null) {
+      this.enclosing.assign(name, value);
+      return;
+    }
+
+    throw new RuntimeError(name, `Undefined variable '${name.lex}'.`);
   }
 }
 
