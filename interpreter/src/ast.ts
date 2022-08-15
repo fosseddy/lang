@@ -8,6 +8,7 @@ export {
   ExprLit,
   ExprGroup,
   ExprVar,
+  ExprAssign,
 
   Stmt,
   StmtVar,
@@ -22,6 +23,7 @@ enum ExprKind {
   Binary,
   Group,
   Var,
+  Assign,
 
   Count
 }
@@ -29,7 +31,13 @@ enum ExprKind {
 class Expr {
   constructor(
       public kind: ExprKind,
-      public body: ExprLit|ExprUnary|ExprBinary|ExprGroup|ExprVar
+      public body:
+        |ExprLit
+        |ExprUnary
+        |ExprBinary
+        |ExprGroup
+        |ExprVar
+        |ExprAssign
   ) {}
 }
 
@@ -57,6 +65,10 @@ class ExprVar {
   constructor(public name: Token) {}
 }
 
+class ExprAssign {
+  constructor(public name: Token, public value: Expr) {}
+}
+
 enum StmtKind {
   Expr = 0,
   Print,
@@ -68,7 +80,11 @@ enum StmtKind {
 class Stmt {
   constructor(
       public kind: StmtKind,
-      public body: StmtExpr|StmtPrint|StmtExpr|StmtVar
+      public body:
+        |StmtExpr
+        |StmtPrint
+        |StmtExpr
+        |StmtVar
   ) {}
 }
 

@@ -84,7 +84,28 @@ class Parser {
   }
 
   expression(): ast.Expr {
-    return this.equality();
+    return this.assignment();
+  }
+
+  assignment(): ast.Expr {
+    const expr = this.equality();
+
+    if (this.next(TokenKind.Eq)) {
+      const eq = this.advance();
+      const val = this.assignment();
+
+      if (expr.kind === ast.ExprKind.Var) {
+        const name = (expr.body as ast.ExprVar).name;
+        return new ast.Expr(
+          ast.ExprKind.Assign,
+          new ast.ExprAssign(name, val)
+        );
+      }
+
+      reportParserError(new ParserError(eq, "Invalid assignment target."));
+    }
+
+    return expr;
   }
 
   equality(): ast.Expr {

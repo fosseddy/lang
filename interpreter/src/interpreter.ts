@@ -99,6 +99,13 @@ class Interpreter {
       return this.env.get(body.name);
     }
 
+    case ast.ExprKind.Assign: {
+      const body = expr.body as ast.ExprAssign;
+      const value = this.evaluate(body.value);
+      this.env.assign(body.name, value)
+      return value;
+    }
+
     default: assert(false);
     }
   }
@@ -119,6 +126,14 @@ class Env {
       throw new RuntimeError(name, `Undefined variable '${name.lex}'.`);
     }
     return val;
+  }
+
+  assign(name: Token, value: Lit): void {
+    if (!this.values.has(name.lex)) {
+      throw new RuntimeError(name, `Undefined variable '${name.lex}'.`);
+    }
+
+    this.values.set(name.lex, value);
   }
 }
 

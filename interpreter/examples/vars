@@ -9,3 +9,8 @@ print "float: " + (float + 0.2);
 print "string: " + string;
 print "bool: " + !bool;
 print "no_val: " + no_val;
+
+var x = "before";
+print x;
+x = "after";
+print x;
