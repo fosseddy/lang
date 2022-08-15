@@ -38,27 +38,6 @@ function report(line: number, where: string, msg: string): void {
 }
 // ERROR END
 
-async function execFile(path: string): Promise<void> {
-  const source = await fs.readFile(path, { encoding: "utf8" });
-  exec(source);
-  if (HAD_ERROR) process.exit(1);
-  if (HAD_RUNTIME_ERROR) process.exit(1);
-}
-
-async function execPrompt(): Promise<void> {
-  const reader = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-  });
-
-  reader.prompt();
-  for await (const line of reader) {
-    exec(line);
-    HAD_ERROR = false;
-    reader.prompt();
-  }
-}
-
 function exec(source: string): void {
   const s = new Scanner(source);
   const p = new Parser(s.scan());
@@ -66,20 +45,3 @@ function exec(source: string): void {
   interpreter.interpret(p.parse());
 }
 
-async function main() {
-  const args = process.argv.slice(2);
-
-  if (args.length > 1) {
-    process.stderr.write("Usage: interp [SCRIPT]\n");
-    process.exit(1);
-  } else if (args.length === 1) {
-    await execFile(args[0]!);
-  } else {
-    await execPrompt();
-  }
-}
-
-main().catch(err => {
-  console.error(err);
-  process.exit(1);
-});

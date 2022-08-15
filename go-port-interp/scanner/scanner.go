@@ -107,7 +107,7 @@ func (s *Scanner) Scan() []token.Token {
 			}
 
 			if !s.hasSource() {
-				fmt.Printf("[line %v] Unterminated string literal", s.line)
+				fmt.Printf("[line %v] Unterminated string literal\n", s.line)
 				break
 			}
 
