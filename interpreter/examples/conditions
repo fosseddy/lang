@@ -1,0 +1,10 @@
+var a = 3;
+if (a <= 5) {
+  print "a is less or equal to 5";
+}
+
+if (false) {
+  print "Should not be printed";
+} else {
+  print "Else block executed";
+}

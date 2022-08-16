@@ -16,6 +16,7 @@ export {
   StmtExpr,
   StmtPrint,
   StmtBlock,
+  StmtIf,
 };
 
 enum ExprKind {
@@ -43,11 +44,17 @@ class Expr {
 }
 
 class ExprLit {
-  constructor(public value: Token|number|string|boolean|null) {}
+  constructor(
+      // @TODO(art): extract type?
+      public value: Token|number|string|boolean|null
+  ) {}
 }
 
 class ExprUnary {
-  constructor(public right: Expr, public operator: Token) {}
+  constructor(
+      public right: Expr,
+      public operator: Token
+  ) {}
 }
 
 class ExprBinary {
@@ -67,7 +74,10 @@ class ExprVar {
 }
 
 class ExprAssign {
-  constructor(public name: Token, public value: Expr) {}
+  constructor(
+      public name: Token,
+      public value: Expr
+  ) {}
 }
 
 enum StmtKind {
@@ -75,6 +85,7 @@ enum StmtKind {
   Print,
   Var,
   Block,
+  If,
 
   Count
 }
@@ -88,6 +99,7 @@ class Stmt {
         |StmtExpr
         |StmtVar
         |StmtBlock
+        |StmtIf
   ) {}
 }
 
@@ -100,9 +112,21 @@ class StmtPrint {
 }
 
 class StmtVar {
-  constructor(public name: Token, public initializer: Expr|null) {}
+  constructor(
+      public name: Token,
+      public initializer: Expr|null
+  ) {}
 }
 
 class StmtBlock {
   constructor(public ss: Stmt[]) {}
 }
+
+class StmtIf {
+  constructor(
+      public cond: Expr,
+      public then: Stmt,
+      public elze: Stmt|null
+  ) {}
+}
+

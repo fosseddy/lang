@@ -59,6 +59,15 @@ class Interpreter {
       }
     } break;
 
+    case ast.StmtKind.If: {
+      const body = s.body as ast.StmtIf;
+      if (isTruthy(this.evaluate(body.cond))) {
+        this.execute(body.then);
+      } else if (body.elze) {
+        this.execute(body.elze);
+      }
+    } break;
+
     default: assert(false);
     }
   }

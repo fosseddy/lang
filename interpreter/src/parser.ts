@@ -73,6 +73,11 @@ class Parser {
       return new ast.Stmt(ast.StmtKind.Block, new ast.StmtBlock(this.block()));
     }
 
+    if (this.next(TokenKind.If)) {
+      this.advance();
+      return this.stmtIf();
+    }
+
     return this.stmtExpr();
   }
 
@@ -86,6 +91,22 @@ class Parser {
     this.consume(TokenKind.RBrace, "Expect '}' after block.");
 
     return ss;
+  }
+
+  stmtIf(): ast.Stmt {
+    this.consume(TokenKind.LParen, "Expect '(' after if.");
+    const cond = this.expression();
+    this.consume(TokenKind.RParen, "Expect ')' after if condition.");
+
+    const then = this.statement();
+    let elze: ast.Stmt|null = null;
+
+    if (this.next(TokenKind.Else)) {
+      this.advance();
+      elze = this.statement();
+    }
+
+    return new ast.Stmt(ast.StmtKind.If, new ast.StmtIf(cond, then, elze));
   }
 
   stmtExpr(): ast.Stmt {
