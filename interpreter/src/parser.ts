@@ -45,7 +45,7 @@ class Parser {
     return this.statement();
   }
 
-  declVar() {
+  declVar(): ast.Stmt {
     const name = this.consume(TokenKind.Ident, "Expect variable name.");
 
     let initializer: ast.Expr|null = null;
@@ -83,6 +83,11 @@ class Parser {
       return this.stmtWhile();
     }
 
+    if (this.next(TokenKind.For)) {
+      this.advance();
+      return this.stmtFor();
+    }
+
     return this.stmtExpr();
   }
 
@@ -96,6 +101,59 @@ class Parser {
     this.consume(TokenKind.RBrace, "Expect '}' after block.");
 
     return ss;
+  }
+
+  stmtFor(): ast.Stmt {
+    this.consume(TokenKind.LParen, "Expect '(' after for.");
+
+    let init: ast.Stmt|null = null;
+    if (this.next(TokenKind.Semicolon)) {
+      this.advance();
+    } else if (this.next(TokenKind.Var)) {
+      this.advance();
+      init = this.declVar();
+    } else {
+      init = this.stmtExpr();
+    }
+
+    let cond: ast.Expr|null = null;
+    if (!this.next(TokenKind.Semicolon)) {
+      cond = this.expression();
+    }
+
+    this.consume(TokenKind.Semicolon, "Expect ';' after loop condition.");
+
+    let inc: ast.Expr|null = null;
+    if (!this.next(TokenKind.RParen)) {
+      inc = this.expression();
+    }
+
+    this.consume(TokenKind.RParen, "Expect ')' after for clauses.");
+
+    let body = this.statement();
+
+    if (inc) {
+      body = new ast.Stmt(
+        ast.StmtKind.Block,
+        new ast.StmtBlock([
+          body,
+          new ast.Stmt(ast.StmtKind.Expr, new ast.StmtExpr(inc))
+        ])
+      );
+    }
+
+    if (!cond) cond = new ast.Expr(ast.ExprKind.Lit, new ast.ExprLit(true));
+
+    body = new ast.Stmt(ast.StmtKind.While, new ast.StmtWhile(cond, body));
+
+    if (init) {
+      body = new ast.Stmt(
+        ast.StmtKind.Block,
+        new ast.StmtBlock([init, body])
+      );
+    }
+
+    return body;
   }
 
   stmtWhile(): ast.Stmt {

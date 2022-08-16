@@ -109,7 +109,6 @@ class Stmt {
       public body:
         |StmtExpr
         |StmtPrint
-        |StmtExpr
         |StmtVar
         |StmtBlock
         |StmtIf
