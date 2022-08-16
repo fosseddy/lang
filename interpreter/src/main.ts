@@ -7,36 +7,7 @@ import { Parser, ParserError } from "./parser.js";
 import { Token, TokenKind } from "./token.js";
 import { Interpreter, RuntimeError } from "./interpreter.js";
 
-export { reportScannerError, reportParserError, reportRuntimeError };
-
 const interpreter = new Interpreter();
-
-// ERROR @TODO(art): move it somewhere?
-let HAD_ERROR = false;
-let HAD_RUNTIME_ERROR = false;
-
-function reportScannerError(line: number, msg: string): void {
-  report(line, "", msg);
-}
-
-function reportParserError(e: ParserError): void {
-  if (e.token.kind === TokenKind.Eof) {
-    report(e.token.line, "at end", e.message);
-  } else {
-    report(e.token.line, `at '${e.token.lex}'`, e.message);
-  }
-}
-
-function reportRuntimeError(e: RuntimeError): void {
-  process.stderr.write(`[line ${e.token.line}] Error ${e.message}\n`);
-  HAD_RUNTIME_ERROR = true;
-}
-
-function report(line: number, where: string, msg: string): void {
-  process.stderr.write(`[line ${line}] Error ${where}: ${msg}\n`);
-  HAD_ERROR = true;
-}
-// ERROR END
 
 async function execFile(path: string): Promise<void> {
   const source = await fs.readFile(path, { encoding: "utf8" });
@@ -83,3 +54,30 @@ main().catch(err => {
   console.error(err);
   process.exit(1);
 });
+
+// ERROR @TODO(art): move it somewhere?
+let HAD_ERROR = false;
+let HAD_RUNTIME_ERROR = false;
+
+export function reportScannerError(line: number, msg: string): void {
+  report(line, "", msg);
+}
+
+export function reportParserError(e: ParserError): void {
+  if (e.token.kind === TokenKind.Eof) {
+    report(e.token.line, "at end", e.message);
+  } else {
+    report(e.token.line, `at '${e.token.lex}'`, e.message);
+  }
+}
+
+export function reportRuntimeError(e: RuntimeError): void {
+  process.stderr.write(`[line ${e.token.line}] Error ${e.message}\n`);
+  HAD_RUNTIME_ERROR = true;
+}
+
+function report(line: number, where: string, msg: string): void {
+  process.stderr.write(`[line ${line}] Error ${where}: ${msg}\n`);
+  HAD_ERROR = true;
+}
+// ERROR END

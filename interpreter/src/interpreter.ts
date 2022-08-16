@@ -3,10 +3,9 @@ import * as ast from "./ast.js";
 import { Token, TokenKind } from "./token.js";
 import { reportRuntimeError } from "./main.js";
 
-export { Interpreter, RuntimeError };
-
-class Interpreter {
-  env = new Env();
+export class Interpreter {
+  globals = new Env();
+  env = this.globals;
 
   interpret(ss: ast.Stmt[]): void {
     try {
@@ -151,15 +150,51 @@ class Interpreter {
       return this.evaluate(body.right);
     }
 
+    case ast.ExprKind.Call: {
+      const body = expr.body as ast.ExprCall;
+      const callee = this.evaluate(body.callee) as Callable;
+
+      // @TODO(art): typing
+      const args: any = [];
+      for (const a of body.args) {
+        args.push(this.evaluate(a));
+      }
+
+      if (!(callee instanceof Callable)) {
+        throw new RuntimeError(
+          body.paren,
+          "Can only call functions and classes."
+        );
+      }
+
+      if (callee.arity !== args.length) {
+        throw new RuntimeError(
+          body.paren,
+          `Expected ${callee.arity} arguments but got ${args.length}.`
+        );
+      }
+
+      return callee.invoke(this, args);
+    }
+
     default: assert(false);
     }
   }
 }
 
+class Callable {
+  constructor(
+      public arity: number,
+      public invoke: (i: Interpreter, args: unknown[]) => unknown
+  ) {}
+}
+
+// @TODO(art): Typing
 type Lit = number|string|boolean|null
+type TT = Lit|Callable
 
 class Env {
-  values = new Map<string, Lit>();
+  values = new Map<string, TT>();
 
   enclosing: Env|null;
 
@@ -167,11 +202,11 @@ class Env {
     this.enclosing = e;
   }
 
-  define(name: string, value: Lit): void {
+  define(name: string, value: TT): void {
     this.values.set(name, value);
   }
 
-  get(name: Token): Lit {
+  get(name: Token): TT {
     const val = this.values.get(name.lex);
     if (val !== undefined) {
       return val;
@@ -184,7 +219,7 @@ class Env {
     throw new RuntimeError(name, `Undefined variable '${name.lex}'.`);
   }
 
-  assign(name: Token, value: Lit): void {
+  assign(name: Token, value: TT): void {
     if (this.values.has(name.lex)) {
       this.values.set(name.lex, value);
       return;
@@ -199,12 +234,9 @@ class Env {
   }
 }
 
-class RuntimeError extends Error {
-  token: Token;
-
-  constructor(t: Token, msg: string) {
+export class RuntimeError extends Error {
+  constructor(public token: Token, msg: string) {
     super(msg);
-    this.token = t;
   }
 }
 
@@ -216,11 +248,11 @@ function isTruthy(val: Lit): boolean {
 }
 
 function isEqual(a: Lit, b: Lit): boolean {
-    if (a == null && b == null) return true;
+  if (a == null && b == null) return true;
 
-    if (typeof a === "number" && typeof b === "number") {
-      if (isNaN(a) && isNaN(b)) return true;
-    }
-
-    return a === b;
+  if (typeof a === "number" && typeof b === "number") {
+    if (isNaN(a) && isNaN(b)) return true;
   }
+
+  return a === b;
+}

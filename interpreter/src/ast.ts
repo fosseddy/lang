@@ -1,27 +1,6 @@
 import { Token } from "./token.js";
 
-export {
-  Expr,
-  ExprKind,
-  ExprUnary,
-  ExprBinary,
-  ExprLit,
-  ExprGroup,
-  ExprVar,
-  ExprAssign,
-  ExprLogical,
-
-  Stmt,
-  StmtVar,
-  StmtKind,
-  StmtExpr,
-  StmtPrint,
-  StmtBlock,
-  StmtIf,
-  StmtWhile
-};
-
-enum ExprKind {
+export enum ExprKind {
   Lit = 0,
   Unary,
   Binary,
@@ -29,11 +8,12 @@ enum ExprKind {
   Var,
   Assign,
   Logical,
+  Call,
 
   Count
 }
 
-class Expr {
+export class Expr {
   constructor(
       public kind: ExprKind,
       public body:
@@ -44,24 +24,25 @@ class Expr {
         |ExprVar
         |ExprAssign
         |ExprLogical
+        |ExprCall
   ) {}
 }
 
-class ExprLit {
+export class ExprLit {
   constructor(
       // @TODO(art): extract type?
       public value: Token|number|string|boolean|null
   ) {}
 }
 
-class ExprUnary {
+export class ExprUnary {
   constructor(
       public right: Expr,
       public operator: Token
   ) {}
 }
 
-class ExprBinary {
+export class ExprBinary {
   constructor(
       public left: Expr,
       public right: Expr,
@@ -69,22 +50,22 @@ class ExprBinary {
   ) {}
 }
 
-class ExprGroup {
+export class ExprGroup {
   constructor(public expr: Expr) {}
 }
 
-class ExprVar {
+export class ExprVar {
   constructor(public name: Token) {}
 }
 
-class ExprAssign {
+export class ExprAssign {
   constructor(
       public name: Token,
       public value: Expr
   ) {}
 }
 
-class ExprLogical {
+export class ExprLogical {
   constructor(
       public left: Expr,
       public right: Expr,
@@ -92,7 +73,15 @@ class ExprLogical {
   ) {}
 }
 
-enum StmtKind {
+export class ExprCall {
+  constructor(
+      public callee: Expr,
+      public args: Expr[],
+      public paren: Token
+  ) {}
+}
+
+export enum StmtKind {
   Expr = 0,
   Print,
   Var,
@@ -103,7 +92,7 @@ enum StmtKind {
   Count
 }
 
-class Stmt {
+export class Stmt {
   constructor(
       public kind: StmtKind,
       public body:
@@ -116,26 +105,26 @@ class Stmt {
   ) {}
 }
 
-class StmtExpr {
+export class StmtExpr {
   constructor(public expr: Expr) {}
 }
 
-class StmtPrint {
+export class StmtPrint {
   constructor(public expr: Expr) {}
 }
 
-class StmtVar {
+export class StmtVar {
   constructor(
       public name: Token,
       public initializer: Expr|null
   ) {}
 }
 
-class StmtBlock {
+export class StmtBlock {
   constructor(public ss: Stmt[]) {}
 }
 
-class StmtIf {
+export class StmtIf {
   constructor(
       public cond: Expr,
       public then: Stmt,
@@ -143,7 +132,7 @@ class StmtIf {
   ) {}
 }
 
-class StmtWhile {
+export class StmtWhile {
   constructor(
       public cond: Expr,
       public body: Stmt

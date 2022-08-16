@@ -3,9 +3,7 @@ import { Token, TokenKind } from "./token.js";
 import * as ast from "./ast.js";
 import { reportParserError } from "./main.js";
 
-export { Parser, ParserError };
-
-class Parser {
+export class Parser {
   current = 0;
 
   tokens: Token[];
@@ -320,7 +318,51 @@ class Parser {
       );
     }
 
-    return this.primary();
+    return this.call();
+  }
+
+  call(): ast.Expr {
+    let expr = this.primary();
+
+    while (true) {
+      if (this.next(TokenKind.LParen)) {
+        this.advance();
+        expr = this.finishCall(expr);
+      } else {
+        break;
+      }
+    }
+
+    return expr;
+  }
+
+  finishCall(callee: ast.Expr): ast.Expr {
+    const args: ast.Expr[] = [];
+
+    if (!this.next(TokenKind.RParen)) {
+      for (;;) {
+        if (args.length >= 255) {
+          reportParserError(
+            new ParserError(this.peek(), "Can't have more than 255 arguments.")
+          );
+        }
+        args.push(this.expression());
+
+        if (!this.next(TokenKind.Comma)) break;
+
+        this.advance();
+      }
+    }
+
+    const paren = this.consume(
+      TokenKind.RParen,
+      "Expect ')' after arguments."
+    );
+
+    return new ast.Expr(
+      ast.ExprKind.Call,
+      new ast.ExprCall(callee, args, paren)
+    );
   }
 
   primary(): ast.Expr {
@@ -418,11 +460,8 @@ class Parser {
   }
 }
 
-class ParserError extends Error {
-  token: Token;
-
-  constructor(t: Token, msg: string) {
+export class ParserError extends Error {
+  constructor(public token: Token, msg: string) {
     super(msg);
-    this.token = t;
   }
 }
