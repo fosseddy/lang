@@ -128,6 +128,20 @@ class Interpreter {
       return value;
     }
 
+    case ast.ExprKind.Logical: {
+      const body = expr.body as ast.ExprLogical;
+      const left = this.evaluate(body.left);
+
+      if (body.operator.kind === TokenKind.Or) {
+        if (isTruthy(left)) return left;
+      } else {
+        assert(body.operator.kind === TokenKind.And);
+        if (!isTruthy(left)) return left;
+      }
+
+      return this.evaluate(body.right);
+    }
+
     default: assert(false);
     }
   }

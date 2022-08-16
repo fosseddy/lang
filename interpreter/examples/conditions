@@ -8,3 +8,6 @@ if (false) {
 } else {
   print "Else block executed";
 }
+
+if (1 < 5 and 5 > 6) print "Should not be printed";
+if (1 < 5 or 5 > 6) print "1 < 5 or 5 > 6";

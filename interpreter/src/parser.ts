@@ -126,7 +126,7 @@ class Parser {
   }
 
   assignment(): ast.Expr {
-    const expr = this.equality();
+    const expr = this.or();
 
     if (this.next(TokenKind.Eq)) {
       const eq = this.advance();
@@ -141,6 +141,36 @@ class Parser {
       }
 
       reportParserError(new ParserError(eq, "Invalid assignment target."));
+    }
+
+    return expr;
+  }
+
+  or(): ast.Expr {
+    let expr = this.and();
+
+    while (this.next(TokenKind.Or)) {
+      const operator = this.advance();
+      const right = this.and();
+      expr = new ast.Expr(
+        ast.ExprKind.Logical,
+        new ast.ExprLogical(expr, right, operator)
+      );
+    }
+
+    return expr;
+  }
+
+  and(): ast.Expr {
+    let expr = this.equality();
+
+    while (this.next(TokenKind.And)) {
+      const operator = this.advance();
+      const right = this.expression();
+      expr = new ast.Expr(
+        ast.ExprKind.Logical,
+        new ast.ExprLogical(expr, right, operator)
+      );
     }
 
     return expr;

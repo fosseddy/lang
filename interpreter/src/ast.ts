@@ -9,6 +9,7 @@ export {
   ExprGroup,
   ExprVar,
   ExprAssign,
+  ExprLogical,
 
   Stmt,
   StmtVar,
@@ -26,6 +27,7 @@ enum ExprKind {
   Group,
   Var,
   Assign,
+  Logical,
 
   Count
 }
@@ -40,6 +42,7 @@ class Expr {
         |ExprGroup
         |ExprVar
         |ExprAssign
+        |ExprLogical
   ) {}
 }
 
@@ -77,6 +80,14 @@ class ExprAssign {
   constructor(
       public name: Token,
       public value: Expr
+  ) {}
+}
+
+class ExprLogical {
+  constructor(
+      public left: Expr,
+      public right: Expr,
+      public operator: Token
   ) {}
 }
 
