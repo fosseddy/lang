@@ -78,6 +78,11 @@ class Parser {
       return this.stmtIf();
     }
 
+    if (this.next(TokenKind.While)) {
+      this.advance();
+      return this.stmtWhile();
+    }
+
     return this.stmtExpr();
   }
 
@@ -91,6 +96,16 @@ class Parser {
     this.consume(TokenKind.RBrace, "Expect '}' after block.");
 
     return ss;
+  }
+
+  stmtWhile(): ast.Stmt {
+    this.consume(TokenKind.LParen, "Expect '(' after while.");
+    const cond = this.expression();
+    this.consume(TokenKind.RParen, "Expect ')' after while condition.");
+
+    const body = this.statement();
+
+    return new ast.Stmt(ast.StmtKind.While, new ast.StmtWhile(cond, body));
   }
 
   stmtIf(): ast.Stmt {

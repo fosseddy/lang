@@ -24,6 +24,7 @@ class Interpreter {
   }
 
   execute(s: ast.Stmt): void {
+    // @TODO(art): rename body variable
     switch (s.kind) {
     case ast.StmtKind.Expr: {
       const body = s.body as ast.StmtExpr;
@@ -68,12 +69,20 @@ class Interpreter {
       }
     } break;
 
+    case ast.StmtKind.While: {
+      const body = s.body as ast.StmtWhile;
+      while (isTruthy(this.evaluate(body.cond))) {
+        this.execute(body.body);
+      }
+    } break;
+
     default: assert(false);
     }
   }
 
   // @TODO(art): Typing
   evaluate(expr: ast.Expr): any {
+    // @TODO(art): rename body variable
     switch (expr.kind) {
     case ast.ExprKind.Lit: {
       const body = expr.body as ast.ExprLit;

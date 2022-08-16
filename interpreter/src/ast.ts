@@ -18,6 +18,7 @@ export {
   StmtPrint,
   StmtBlock,
   StmtIf,
+  StmtWhile
 };
 
 enum ExprKind {
@@ -97,6 +98,7 @@ enum StmtKind {
   Var,
   Block,
   If,
+  While,
 
   Count
 }
@@ -111,6 +113,7 @@ class Stmt {
         |StmtVar
         |StmtBlock
         |StmtIf
+        |StmtWhile
   ) {}
 }
 
@@ -141,3 +144,9 @@ class StmtIf {
   ) {}
 }
 
+class StmtWhile {
+  constructor(
+      public cond: Expr,
+      public body: Stmt
+  ) {}
+}
