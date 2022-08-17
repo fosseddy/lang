@@ -77,6 +77,14 @@ export class Interpreter {
       this.env.define(body.name.lex, fun);
     } break;
 
+    case ast.StmtKind.Ret: {
+      const body = s.body as ast.StmtRet;
+      let value: TT = null;
+      if (body.value !== null) value = this.evaluate(body.value);
+
+      throw new Return(value);
+    } break;
+
     default: assert(false);
     }
   }
@@ -223,7 +231,7 @@ class Fun {
     this.arity = this.decl.params.length;
   }
 
-  invoke(i: Interpreter, args: unknown[]): void {
+  invoke(i: Interpreter, args: unknown[]): TT { // @TODO(art): typing
     const env = new Env(i.globals);
     for (let i = 0; i < this.decl.params.length; i++) {
       const tok = this.decl.params[i];
@@ -231,7 +239,18 @@ class Fun {
       env.define(tok.lex, args[i] as TT); // @TODO(art): typing
     }
 
-    i.executeBlock(this.decl.body, env);
+    try {
+      i.executeBlock(this.decl.body, env);
+    } catch (err) {
+      if (err instanceof Return) {
+        return err.value;
+      } else {
+        console.error("Unknown Error during return from a function:", err);
+        process.exit(1);
+      }
+    }
+
+    return null;
   }
 
   toString() {
@@ -277,6 +296,12 @@ class Env {
     }
 
     throw new RuntimeError(name, `Undefined variable '${name.lex}'.`);
+  }
+}
+
+class Return extends Error {
+  constructor(public value: TT) {
+    super("");
   }
 }
 

@@ -5,3 +5,14 @@ fun say_hello(name) {
 }
 
 say_hello("Mark");
+
+fun early_ret(a) {
+  if (a < 3) {
+    return 69;
+  }
+
+  return 420;
+}
+
+print "expect 420: " + early_ret(5);
+print "expect 69: " + early_ret(2);

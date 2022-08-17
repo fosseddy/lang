@@ -123,6 +123,10 @@ export class Parser {
       return this.stmtFor();
     }
 
+    if (this.next(TokenKind.Ret)) {
+      return this.stmtRet();
+    }
+
     return this.stmtExpr();
   }
 
@@ -136,6 +140,19 @@ export class Parser {
     this.consume(TokenKind.RBrace, "Expect '}' after block.");
 
     return ss;
+  }
+
+  stmtRet(): ast.Stmt {
+    const token = this.advance();
+
+    let expr: ast.Expr|null = null;
+    if (!this.next(TokenKind.Semicolon)) {
+      expr = this.expression();
+    }
+
+    this.consume(TokenKind.Semicolon, "Expect ';' after return value.");
+
+    return new ast.Stmt(ast.StmtKind.Ret, new ast.StmtRet(token, expr));
   }
 
   stmtFor(): ast.Stmt {
@@ -458,7 +475,7 @@ export class Parser {
           TokenKind.If,
           TokenKind.While,
           TokenKind.Print,
-          TokenKind.Return
+          TokenKind.Ret
         )
       ) return;
     }
