@@ -7,6 +7,10 @@ export class Interpreter {
   globals = new Env();
   env = this.globals;
 
+  constructor() {
+    this.globals.define("clock", new GlobalFun((): number => Date.now(), 0));
+  }
+
   interpret(ss: ast.Stmt[]): void {
     try {
       for (const s of ss) {
@@ -48,15 +52,7 @@ export class Interpreter {
 
     case ast.StmtKind.Block: {
       const body = s.body as ast.StmtBlock;
-      const prev = this.env;
-      try {
-        this.env = new Env(this.env);
-        for (const s of body.ss) {
-          this.execute(s);
-        }
-      } finally {
-        this.env = prev;
-      }
+      this.executeBlock(body.ss, new Env(this.env));
     } break;
 
     case ast.StmtKind.If: {
@@ -73,6 +69,12 @@ export class Interpreter {
       while (isTruthy(this.evaluate(body.cond))) {
         this.execute(body.body);
       }
+    } break;
+
+    case ast.StmtKind.Fun: {
+      const body = s.body as ast.StmtFun;
+      const fun = new Fun(body);
+      this.env.define(body.name.lex, fun);
     } break;
 
     default: assert(false);
@@ -154,17 +156,16 @@ export class Interpreter {
       const body = expr.body as ast.ExprCall;
       const callee = this.evaluate(body.callee) as Callable;
 
-      // @TODO(art): typing
-      const args: any = [];
-      for (const a of body.args) {
-        args.push(this.evaluate(a));
-      }
-
-      if (!(callee instanceof Callable)) {
+      if (!callee.invoke) {
         throw new RuntimeError(
           body.paren,
           "Can only call functions and classes."
         );
+      }
+
+      const args: unknown[] = [];
+      for (const a of body.args) {
+        args.push(this.evaluate(a));
       }
 
       if (callee.arity !== args.length) {
@@ -180,18 +181,63 @@ export class Interpreter {
     default: assert(false);
     }
   }
-}
 
-class Callable {
-  constructor(
-      public arity: number,
-      public invoke: (i: Interpreter, args: unknown[]) => unknown
-  ) {}
+  executeBlock(ss: ast.Stmt[], env: Env) {
+    const prev = this.env;
+    try {
+      this.env = env;
+      for (const s of ss) {
+        this.execute(s);
+      }
+    } finally {
+      this.env = prev;
+    }
+  }
 }
 
 // @TODO(art): Typing
 type Lit = number|string|boolean|null
 type TT = Lit|Callable
+type InvokeFun = (i: Interpreter, args: unknown[]) => unknown;
+type Callable = {
+  arity: number;
+  invoke: InvokeFun;
+}
+
+class GlobalFun {
+  constructor(public fn: InvokeFun, public arity: number) {}
+
+  invoke(i: Interpreter, args: unknown[]): unknown {
+    return this.fn(i, args);
+  }
+
+  toString() {
+    return "<native fun>";
+  }
+}
+
+class Fun {
+  arity: number;
+
+  constructor(public decl: ast.StmtFun) {
+    this.arity = this.decl.params.length;
+  }
+
+  invoke(i: Interpreter, args: unknown[]): void {
+    const env = new Env(i.globals);
+    for (let i = 0; i < this.decl.params.length; i++) {
+      const tok = this.decl.params[i];
+      assert(tok != null);
+      env.define(tok.lex, args[i] as TT); // @TODO(art): typing
+    }
+
+    i.executeBlock(this.decl.body, env);
+  }
+
+  toString() {
+    return `<fun ${this.decl.name.lex}>`;
+  }
+}
 
 class Env {
   values = new Map<string, TT>();

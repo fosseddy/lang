@@ -88,6 +88,7 @@ export enum StmtKind {
   Block,
   If,
   While,
+  Fun,
 
   Count
 }
@@ -102,6 +103,7 @@ export class Stmt {
         |StmtBlock
         |StmtIf
         |StmtWhile
+        |StmtFun
   ) {}
 }
 
@@ -136,5 +138,13 @@ export class StmtWhile {
   constructor(
       public cond: Expr,
       public body: Stmt
+  ) {}
+}
+
+export class StmtFun {
+  constructor(
+      public name: Token,
+      public params: Token[],
+      public body: Stmt[]
   ) {}
 }

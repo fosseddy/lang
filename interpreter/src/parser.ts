@@ -40,7 +40,44 @@ export class Parser {
       return this.declVar();
     }
 
+    if (this.next(TokenKind.Fun)) {
+      this.advance();
+      return this.declFun("function");
+    }
+
     return this.statement();
+  }
+
+  declFun(kind: string): ast.Stmt {
+    const name = this.consume(TokenKind.Ident, `Expect ${kind} name`);
+    this.consume(TokenKind.LParen, `Expect '(' after ${kind} name`);
+
+    const params: Token[] = [];
+    if (!this.next(TokenKind.RParen)) {
+      for (;;) {
+        if (params.length >= 255) {
+          reportParserError(
+            new ParserError(
+              this.peek(),
+              "Can't have more than 255 parameters."
+            )
+          );
+        }
+
+        params.push(this.consume(TokenKind.Ident, "Expect parameter name."));
+
+        if (!this.next(TokenKind.Comma)) break;
+
+        this.advance();
+      }
+    }
+
+    this.consume(TokenKind.RParen, "Expect ')' after parameters.");
+
+    this.consume(TokenKind.LBrace, `Expect '{' before ${kind} body.`);
+    const body = this.block();
+
+    return new ast.Stmt(ast.StmtKind.Fun, new ast.StmtFun(name, params, body));
   }
 
   declVar(): ast.Stmt {
@@ -324,7 +361,7 @@ export class Parser {
   call(): ast.Expr {
     let expr = this.primary();
 
-    while (true) {
+    for (;;) {
       if (this.next(TokenKind.LParen)) {
         this.advance();
         expr = this.finishCall(expr);
@@ -346,6 +383,7 @@ export class Parser {
             new ParserError(this.peek(), "Can't have more than 255 arguments.")
           );
         }
+
         args.push(this.expression());
 
         if (!this.next(TokenKind.Comma)) break;
