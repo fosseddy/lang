@@ -16,3 +16,17 @@ fun early_ret(a) {
 
 print "expect 420: " + early_ret(5);
 print "expect 69: " + early_ret(2);
+
+fun make_counter() {
+  var i = 0;
+  fun inc() {
+    i = i + 1;
+    return i;
+  }
+
+  return inc;
+}
+
+var counter = make_counter();
+print "closure: " + counter();
+print "closure: " + counter();

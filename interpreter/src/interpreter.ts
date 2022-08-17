@@ -73,7 +73,7 @@ export class Interpreter {
 
     case ast.StmtKind.Fun: {
       const body = s.body as ast.StmtFun;
-      const fun = new Fun(body);
+      const fun = new Fun(body, this.env);
       this.env.define(body.name.lex, fun);
     } break;
 
@@ -227,12 +227,15 @@ class GlobalFun {
 class Fun {
   arity: number;
 
-  constructor(public decl: ast.StmtFun) {
+  constructor(
+      public decl: ast.StmtFun,
+      public closure: Env
+  ) {
     this.arity = this.decl.params.length;
   }
 
   invoke(i: Interpreter, args: unknown[]): TT { // @TODO(art): typing
-    const env = new Env(i.globals);
+    const env = new Env(this.closure);
     for (let i = 0; i < this.decl.params.length; i++) {
       const tok = this.decl.params[i];
       assert(tok != null);
