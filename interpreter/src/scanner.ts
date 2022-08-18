@@ -10,11 +10,7 @@ export class Scanner {
   current = 0;
   line = 1;
 
-  source: string;
-
-  constructor(s: string) {
-    this.source = s;
-  }
+  constructor(public source: string) {}
 
   scan(): Token[] {
     while (this.hasSource()) {

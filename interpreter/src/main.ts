@@ -5,7 +5,7 @@ import readline from "readline";
 import { Scanner } from "./scanner.js";
 import { Resolver } from "./resolver.js";
 import { Parser, ParserError } from "./parser.js";
-import { Token, TokenKind } from "./token.js";
+import { TokenKind } from "./token.js";
 import { Interpreter, RuntimeError } from "./interpreter.js";
 
 const interpreter = new Interpreter();

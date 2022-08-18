@@ -6,11 +6,8 @@ import { reportParserError } from "./main.js";
 export class Parser {
   current = 0;
 
-  tokens: Token[];
-
-  constructor(ts: Token[]) {
-    assert(ts.length > 0);
-    this.tokens = ts;
+  constructor(public tokens: Token[]) {
+    assert(this.tokens.length > 0);
   }
 
   parse(): ast.Stmt[] {
