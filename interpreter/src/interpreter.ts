@@ -4,11 +4,12 @@ import { Token, TokenKind } from "./token.js";
 import { reportRuntimeError } from "./main.js";
 
 export class Interpreter {
+  locals = new Map<ast.Expr, number>();
   globals = new Env();
   env = this.globals;
 
   constructor() {
-    this.globals.define("clock", new GlobalFun((): number => Date.now(), 0));
+    this.globals.define("clock", new NativeFun((): number => Date.now(), 0));
   }
 
   interpret(ss: ast.Stmt[]): void {
@@ -136,13 +137,18 @@ export class Interpreter {
 
     case ast.ExprKind.Var: {
       const body = expr.body as ast.ExprVar;
-      return this.env.get(body.name);
+      return this.lookUpVar(body.name, expr);
     }
 
     case ast.ExprKind.Assign: {
       const body = expr.body as ast.ExprAssign;
       const value = this.evaluate(body.value);
-      this.env.assign(body.name, value)
+      const depth = this.locals.get(expr);
+      if (depth != null) {
+        this.env.assignAt(depth, body.name, value);
+      } else {
+        this.globals.assign(body.name, value)
+      }
       return value;
     }
 
@@ -201,6 +207,20 @@ export class Interpreter {
       this.env = prev;
     }
   }
+
+
+  lookUpVar(t: Token, e: ast.Expr): TT {
+    const depth = this.locals.get(e);
+    if (depth != null) {
+      return this.env.getAt(depth, t.lex);
+    }
+
+    return this.globals.get(t);
+  }
+
+  resolve(e: ast.Expr, depth: number): void {
+    this.locals.set(e, depth);
+  }
 }
 
 // @TODO(art): Typing
@@ -212,7 +232,7 @@ type Callable = {
   invoke: InvokeFun;
 }
 
-class GlobalFun {
+class NativeFun {
   constructor(public fn: InvokeFun, public arity: number) {}
 
   invoke(i: Interpreter, args: unknown[]): unknown {
@@ -264,11 +284,7 @@ class Fun {
 class Env {
   values = new Map<string, TT>();
 
-  enclosing: Env|null;
-
-  constructor(e: Env|null = null) {
-    this.enclosing = e;
-  }
+  constructor(public enclosing: Env|null = null) {}
 
   define(name: string, value: TT): void {
     this.values.set(name, value);
@@ -287,6 +303,10 @@ class Env {
     throw new RuntimeError(name, `Undefined variable '${name.lex}'.`);
   }
 
+  getAt(depth: number, lex: string): TT {
+    return this.ancestor(depth).values.get(lex)!;
+  }
+
   assign(name: Token, value: TT): void {
     if (this.values.has(name.lex)) {
       this.values.set(name.lex, value);
@@ -299,6 +319,20 @@ class Env {
     }
 
     throw new RuntimeError(name, `Undefined variable '${name.lex}'.`);
+  }
+
+  assignAt(depth: number, name: Token, value: TT): void {
+    this.ancestor(depth).values.set(name.lex, value);
+  }
+
+  ancestor(depth: number): Env {
+    let env: Env = this;
+    for (let i = 0; i < depth; i++) {
+      assert(env != null);
+      assert(env.enclosing != null);
+      env = env.enclosing;
+    }
+    return env;
   }
 }
 

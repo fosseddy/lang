@@ -3,6 +3,7 @@
 import fs from "fs/promises";
 import readline from "readline";
 import { Scanner } from "./scanner.js";
+import { Resolver } from "./resolver.js";
 import { Parser, ParserError } from "./parser.js";
 import { Token, TokenKind } from "./token.js";
 import { Interpreter, RuntimeError } from "./interpreter.js";
@@ -33,8 +34,16 @@ async function execPrompt(): Promise<void> {
 function exec(source: string): void {
   const s = new Scanner(source);
   const p = new Parser(s.scan());
+  const stmts = p.parse();
 
-  interpreter.interpret(p.parse());
+  if (HAD_ERROR) return;
+
+  const r = new Resolver(interpreter);
+  r.resolve(stmts);
+
+  if (HAD_ERROR) return;
+
+  interpreter.interpret(stmts);
 }
 
 async function main() {
@@ -59,6 +68,8 @@ main().catch(err => {
 let HAD_ERROR = false;
 let HAD_RUNTIME_ERROR = false;
 
+// @TODO(art): refactor into more general error reporting, rather than
+// reporting each individual error
 export function reportScannerError(line: number, msg: string): void {
   report(line, "", msg);
 }
@@ -74,6 +85,11 @@ export function reportParserError(e: ParserError): void {
 export function reportRuntimeError(e: RuntimeError): void {
   process.stderr.write(`[line ${e.token.line}] Error ${e.message}\n`);
   HAD_RUNTIME_ERROR = true;
+}
+
+// @TODO(art): same as reportScannerError()
+export function reportError(line: number, msg: string) {
+  report(line, "", msg);
 }
 
 function report(line: number, where: string, msg: string): void {
