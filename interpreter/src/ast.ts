@@ -9,8 +9,8 @@ export enum ExprKind {
   Assign,
   Logical,
   Call,
-
-  Count
+  Get,
+  Set
 }
 
 export class Expr {
@@ -25,6 +25,8 @@ export class Expr {
         |ExprAssign
         |ExprLogical
         |ExprCall
+        |ExprGet
+        |ExprSet
   ) {}
 }
 
@@ -81,6 +83,21 @@ export class ExprCall {
   ) {}
 }
 
+export class ExprGet {
+  constructor(
+      public object: Expr,
+      public token: Token
+  ) {}
+}
+
+export class ExprSet {
+  constructor(
+      public object: Expr,
+      public token: Token,
+      public value: Expr
+  ) {}
+}
+
 export enum StmtKind {
   Expr = 0,
   Print,
@@ -90,8 +107,7 @@ export enum StmtKind {
   While,
   Fun,
   Ret,
-
-  Count
+  Class
 }
 
 export class Stmt {
@@ -106,6 +122,7 @@ export class Stmt {
         |StmtWhile
         |StmtFun
         |StmtRet
+        |StmtClass
   ) {}
 }
 
@@ -155,5 +172,12 @@ export class StmtRet {
   constructor(
       public token: Token,
       public value: Expr|null
+  ) {}
+}
+
+export class StmtClass {
+  constructor(
+      public token: Token,
+      public methods: Stmt[]
   ) {}
 }

@@ -41,9 +41,7 @@ export enum TokenKind {
   Var,
   While,
 
-  Eof,
-
-  Count
+  Eof
 }
 
 export const keywords = new Map<string, TokenKind>([

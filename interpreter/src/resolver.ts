@@ -7,8 +7,7 @@ import { reportError } from "./main.js";
 enum FunKind {
   None = 0,
   Fun,
-
-  Count
+  Method
 }
 
 export class Resolver {
@@ -80,6 +79,17 @@ export class Resolver {
       this.resolveStmt(body.body);
     } break;
 
+    case ast.StmtKind.Class: {
+      const body = s.body as ast.StmtClass;
+      this.declare(body.token);
+      this.define(body.token);
+
+      for (const methodExpr of body.methods) {
+        const decl = FunKind.Method;
+        this.resolveFun(methodExpr.body as ast.StmtFun, decl);
+      }
+    } break;
+
     default: assert(false);
     }
   }
@@ -134,6 +144,17 @@ export class Resolver {
     case ast.ExprKind.Unary: {
       const body = e.body as ast.ExprUnary;
       this.resolveExpr(body.right);
+    } break;
+
+    case ast.ExprKind.Get: {
+      const body = e.body as ast.ExprGet;
+      this.resolveExpr(body.object);
+    } break;
+
+    case ast.ExprKind.Set: {
+      const body = e.body as ast.ExprSet;
+      this.resolveExpr(body.value);
+      this.resolveExpr(body.object);
     } break;
 
     case ast.ExprKind.Lit: break;

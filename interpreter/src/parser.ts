@@ -42,7 +42,27 @@ export class Parser {
       return this.declFun("function");
     }
 
+    if (this.next(TokenKind.Class)) {
+      this.advance();
+      return this.declClass();
+    }
+
     return this.statement();
+  }
+
+  declClass(): ast.Stmt {
+    const tok = this.consume(TokenKind.Ident, "Excpect class name.");
+
+    this.consume(TokenKind.LBrace, "Expect '{' before class body.");
+
+    const methods: ast.Stmt[] = [];
+    while (!this.next(TokenKind.RBrace) && this.hasTokens()) {
+      methods.push(this.declFun("method"));
+    }
+
+    this.consume(TokenKind.RBrace, "Expect '}' after class body.");
+
+    return new ast.Stmt(ast.StmtKind.Class, new ast.StmtClass(tok, methods));
   }
 
   declFun(kind: string): ast.Stmt {
@@ -260,6 +280,12 @@ export class Parser {
           ast.ExprKind.Assign,
           new ast.ExprAssign(name, val)
         );
+      } else if (expr.kind === ast.ExprKind.Get) {
+        const body = expr.body as ast.ExprGet;
+        return new ast.Expr(
+          ast.ExprKind.Set,
+          new ast.ExprSet(body.object, body.token, val)
+        );
       }
 
       reportParserError(new ParserError(eq, "Invalid assignment target."));
@@ -379,6 +405,13 @@ export class Parser {
       if (this.next(TokenKind.LParen)) {
         this.advance();
         expr = this.finishCall(expr);
+      } else if (this.next(TokenKind.Dot)) {
+        this.advance();
+        const token = this.consume(
+          TokenKind.Ident,
+          "Expect property name after '.'."
+        );
+        expr = new ast.Expr(ast.ExprKind.Get, new ast.ExprGet(expr, token));
       } else {
         break;
       }

@@ -86,6 +86,21 @@ export class Interpreter {
       throw new Return(value);
     } break;
 
+    case ast.StmtKind.Class: {
+      const body = s.body as ast.StmtClass;
+      this.env.define(body.token.lex, null);
+
+      const methods = new Map<string, Fun>();
+      for (const methodExpr of body.methods) {
+        const m = methodExpr.body as ast.StmtFun;
+        const fn = new Fun(m, this.env);
+        methods.set(m.name.lex, fn);
+      }
+      const klass = new Klass(body.token.lex, methods);
+
+      this.env.assign(body.token, klass);
+    } break;
+
     default: assert(false);
     }
   }
@@ -192,6 +207,31 @@ export class Interpreter {
       return callee.invoke(this, args);
     }
 
+    case ast.ExprKind.Get: {
+      const body = expr.body as ast.ExprGet;
+
+      const obj: TT = this.evaluate(body.object);
+      if (obj instanceof Instance) {
+        return obj.get(body.token);
+      }
+
+      throw new RuntimeError(body.token, "Only instances have properties.");
+    }
+
+    case ast.ExprKind.Set: {
+      const body = expr.body as ast.ExprSet;
+
+      const obj: TT = this.evaluate(body.object);
+      if (!(obj instanceof Instance)) {
+        throw new RuntimeError(body.token, "Only instances have fields.");
+      }
+
+      const val = this.evaluate(body.value);
+      obj.set(body.token, val);
+
+      return val;
+    }
+
     default: assert(false);
     }
   }
@@ -239,7 +279,7 @@ class NativeFun {
     return this.fn(i, args);
   }
 
-  toString() {
+  toString(): string {
     return "<native fun>";
   }
 }
@@ -276,8 +316,57 @@ class Fun {
     return null;
   }
 
-  toString() {
+  toString(): string {
     return `<fun ${this.decl.name.lex}>`;
+  }
+}
+
+class Klass {
+  arity = 0;
+
+  constructor(
+      public name: string,
+      public methods: Map<string, Fun>
+  ) {}
+
+  invoke(i: Interpreter, args: unknown[]): Instance {
+    assert(i);
+    assert(args);
+    const inst = new Instance(this);
+    return inst;
+  }
+
+  findMethod(name: string): Fun|null {
+    return this.methods.get(name) ?? null;
+  }
+
+  toString(): string {
+    return this.name;
+  }
+}
+
+class Instance {
+  fields = new Map<String, TT>();
+
+  constructor(public klass: Klass) {}
+
+  get(name: Token): TT {
+    if (this.fields.has(name.lex)) {
+      return this.fields.get(name.lex)!;
+    }
+
+    const m = this.klass.findMethod(name.lex);
+    if (m) return m;
+
+    throw new RuntimeError(name, `Undefined property '${name.lex}'.`);
+  }
+
+  set(name: Token, value: TT): void {
+    this.fields.set(name.lex, value);
+  }
+
+  toString(): string {
+    return `${this.klass.name} instance`;
   }
 }
 
