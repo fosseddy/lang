@@ -10,7 +10,8 @@ export enum ExprKind {
   Logical,
   Call,
   Get,
-  Set
+  Set,
+  This
 }
 
 export class Expr {
@@ -27,6 +28,7 @@ export class Expr {
         |ExprCall
         |ExprGet
         |ExprSet
+        |ExprThis
   ) {}
 }
 
@@ -96,6 +98,10 @@ export class ExprSet {
       public token: Token,
       public value: Expr
   ) {}
+}
+
+export class ExprThis {
+  constructor(public kwd: Token) {}
 }
 
 export enum StmtKind {

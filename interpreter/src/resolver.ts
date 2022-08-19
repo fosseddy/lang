@@ -84,10 +84,15 @@ export class Resolver {
       this.declare(body.token);
       this.define(body.token);
 
+      this.beginScope();
+      this.scopes.at(-1)!.set("this", true);
+
       for (const methodExpr of body.methods) {
         const decl = FunKind.Method;
         this.resolveFun(methodExpr.body as ast.StmtFun, decl);
       }
+
+      this.endScope();
     } break;
 
     default: assert(false);
@@ -155,6 +160,11 @@ export class Resolver {
       const body = e.body as ast.ExprSet;
       this.resolveExpr(body.value);
       this.resolveExpr(body.object);
+    } break;
+
+    case ast.ExprKind.This: {
+      const body = e.body as ast.ExprThis;
+      this.resolveLocalExpr(e, body.kwd);
     } break;
 
     case ast.ExprKind.Lit: break;

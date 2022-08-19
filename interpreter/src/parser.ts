@@ -487,6 +487,13 @@ export class Parser {
       );
     }
 
+    if (this.next(TokenKind.This)) {
+      return new ast.Expr(
+        ast.ExprKind.This,
+        new ast.ExprThis(this.advance())
+      );
+    }
+
     throw new ParserError(this.peek(), "Expected expression.");
   }
 

@@ -18,3 +18,24 @@ print b.hello;
 
 b.cook();
 b.serve("Mark");
+
+class Egotist {
+  speak() {
+    print this;
+  }
+}
+
+Egotist().speak();
+var method = Egotist().speak;
+method();
+
+class Cake {
+  taste() {
+    var adjective = "delicious";
+    print "The " + this.flavor + " cake is " + adjective + "!";
+  }
+}
+
+var cake = Cake();
+cake.flavor = "German chocolate";
+cake.taste();

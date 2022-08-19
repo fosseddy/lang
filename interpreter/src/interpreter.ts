@@ -232,6 +232,12 @@ export class Interpreter {
       return val;
     }
 
+    case ast.ExprKind.This: {
+      const body = expr.body as ast.ExprThis;
+
+      return this.lookUpVar(body.kwd, expr);
+    }
+
     default: assert(false);
     }
   }
@@ -265,7 +271,7 @@ export class Interpreter {
 
 // @TODO(art): Typing
 type Lit = number|string|boolean|null
-type TT = Lit|Callable
+type TT = Lit|Callable|Instance
 type InvokeFun = (i: Interpreter, args: unknown[]) => unknown;
 type Callable = {
   arity: number;
@@ -316,6 +322,12 @@ class Fun {
     return null;
   }
 
+  bind(inst: Instance): Fun {
+    const env = new Env(this.closure);
+    env.define("this", inst);
+    return new Fun(this.decl, env);
+  }
+
   toString(): string {
     return `<fun ${this.decl.name.lex}>`;
   }
@@ -356,7 +368,7 @@ class Instance {
     }
 
     const m = this.klass.findMethod(name.lex);
-    if (m) return m;
+    if (m) return m.bind(this);
 
     throw new RuntimeError(name, `Undefined property '${name.lex}'.`);
   }
