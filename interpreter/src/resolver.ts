@@ -10,9 +10,15 @@ enum FunKind {
   Method
 }
 
+enum ClassKind {
+  None = 0,
+  Class
+}
+
 export class Resolver {
   scopes: Array<Map<string, boolean>> = [];
   currFunKind = FunKind.None;
+  currClassKind = ClassKind.None;
 
   constructor(public interp: Interpreter) {}
 
@@ -81,6 +87,10 @@ export class Resolver {
 
     case ast.StmtKind.Class: {
       const body = s.body as ast.StmtClass;
+
+      const prevClassKind = this.currClassKind;
+      this.currClassKind = ClassKind.Class;
+
       this.declare(body.token);
       this.define(body.token);
 
@@ -93,6 +103,7 @@ export class Resolver {
       }
 
       this.endScope();
+      this.currClassKind = prevClassKind;
     } break;
 
     default: assert(false);
@@ -164,6 +175,9 @@ export class Resolver {
 
     case ast.ExprKind.This: {
       const body = e.body as ast.ExprThis;
+      if (this.currClassKind === ClassKind.None) {
+        reportError(body.kwd.line, "Can't use 'this' outside of a class.");
+      }
       this.resolveLocalExpr(e, body.kwd);
     } break;
 
