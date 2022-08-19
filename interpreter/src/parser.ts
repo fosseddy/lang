@@ -52,6 +52,16 @@ export class Parser {
 
   declClass(): ast.Stmt {
     const tok = this.consume(TokenKind.Ident, "Excpect class name.");
+    let parent: ast.Expr|null = null;
+    if (this.next(TokenKind.Less)) {
+      this.advance();
+      parent = new ast.Expr(
+        ast.ExprKind.Var,
+        new ast.ExprVar(
+          this.consume(TokenKind.Ident, "Expect parent class name.")
+        )
+      );
+    }
 
     this.consume(TokenKind.LBrace, "Expect '{' before class body.");
 
@@ -62,7 +72,10 @@ export class Parser {
 
     this.consume(TokenKind.RBrace, "Expect '}' after class body.");
 
-    return new ast.Stmt(ast.StmtKind.Class, new ast.StmtClass(tok, methods));
+    return new ast.Stmt(
+      ast.StmtKind.Class,
+      new ast.StmtClass(tok, parent, methods)
+    );
   }
 
   declFun(kind: string): ast.Stmt {
@@ -492,6 +505,17 @@ export class Parser {
         ast.ExprKind.This,
         new ast.ExprThis(this.advance())
       );
+    }
+
+    if (this.next(TokenKind.Super)) {
+      const kwd = this.advance();
+      this.consume(TokenKind.Dot, "Expect '.' after 'super'.");
+      const method = this.consume(
+        TokenKind.Ident,
+        "Expect parent class method name."
+      );
+
+      return new ast.Expr(ast.ExprKind.Super, new ast.ExprSuper(kwd, method));
     }
 
     throw new ParserError(this.peek(), "Expected expression.");

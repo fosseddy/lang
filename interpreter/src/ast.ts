@@ -1,5 +1,7 @@
 import { Token } from "./token.js";
 
+// @TODO(art): Inconsistency with token naming(name, token, kwd);
+
 export enum ExprKind {
   Lit = 0,
   Unary,
@@ -11,7 +13,8 @@ export enum ExprKind {
   Call,
   Get,
   Set,
-  This
+  This,
+  Super
 }
 
 export class Expr {
@@ -29,6 +32,7 @@ export class Expr {
         |ExprGet
         |ExprSet
         |ExprThis
+        |ExprSuper
   ) {}
 }
 
@@ -102,6 +106,13 @@ export class ExprSet {
 
 export class ExprThis {
   constructor(public kwd: Token) {}
+}
+
+export class ExprSuper {
+  constructor(
+      public kwd: Token,
+      public method: Token
+  ) {}
 }
 
 export enum StmtKind {
@@ -184,6 +195,7 @@ export class StmtRet {
 export class StmtClass {
   constructor(
       public token: Token,
+      public parent: Expr|null,
       public methods: Stmt[]
   ) {}
 }

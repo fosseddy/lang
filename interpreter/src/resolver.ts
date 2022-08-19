@@ -13,7 +13,8 @@ enum FunKind {
 
 enum ClassKind {
   None = 0,
-  Class
+  Class,
+  Subclass
 }
 
 export class Resolver {
@@ -103,6 +104,21 @@ export class Resolver {
       this.declare(body.token);
       this.define(body.token);
 
+      if (body.parent) {
+        this.currClassKind = ClassKind.Subclass;
+        const parent = body.parent.body as ast.ExprVar;
+        if (body.token.lex === parent.name.lex) {
+          reportError(
+            parent.name.line,
+            "A class can't inherit from itself."
+          );
+        }
+        this.resolveExpr(body.parent);
+
+        this.beginScope();
+        this.scopes.at(-1)!.set("super", true);
+      }
+
       this.beginScope();
       this.scopes.at(-1)!.set("this", true);
 
@@ -113,6 +129,8 @@ export class Resolver {
       }
 
       this.endScope();
+      if (body.parent) this.endScope();
+
       this.currClassKind = prevClassKind;
     } break;
 
@@ -187,6 +205,19 @@ export class Resolver {
       const body = e.body as ast.ExprThis;
       if (this.currClassKind === ClassKind.None) {
         reportError(body.kwd.line, "Can't use 'this' outside of a class.");
+      }
+      this.resolveLocalExpr(e, body.kwd);
+    } break;
+
+    case ast.ExprKind.Super: {
+      const body = e.body as ast.ExprSuper;
+      if (this.currClassKind == ClassKind.None) {
+        reportError(body.kwd.line, "Can't use 'super' outside of a class.");
+      } else if (this.currClassKind !== ClassKind.Subclass) {
+        reportError(
+          body.kwd.line,
+          "Can't use 'super' in a class with no parent."
+        );
       }
       this.resolveLocalExpr(e, body.kwd);
     } break;

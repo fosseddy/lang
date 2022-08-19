@@ -88,7 +88,20 @@ export class Interpreter {
 
     case ast.StmtKind.Class: {
       const body = s.body as ast.StmtClass;
+      let parent: Klass|null = null;
+      if (body.parent) {
+        const p = body.parent.body as ast.ExprVar;
+        parent = this.evaluate(body.parent);
+        if (!(parent instanceof Klass)) {
+          throw new RuntimeError(p.name, "Parent must be a class.");
+        }
+      }
       this.env.define(body.token.lex, null);
+
+      if (parent) {
+        this.env = new Env(this.env);
+        this.env.define("super", parent);
+      }
 
       const methods = new Map<string, Fun>();
       for (const methodExpr of body.methods) {
@@ -96,7 +109,12 @@ export class Interpreter {
         const fn = new Fun(m, this.env, m.name.lex === "init");
         methods.set(m.name.lex, fn);
       }
-      const klass = new Klass(body.token.lex, methods);
+      const klass = new Klass(body.token.lex, methods, parent);
+
+      if (parent) {
+        assert(this.env.enclosing);
+        this.env = this.env.enclosing;
+      }
 
       this.env.assign(body.token, klass);
     } break;
@@ -238,6 +256,30 @@ export class Interpreter {
       return this.lookUpVar(body.kwd, expr);
     }
 
+    case ast.ExprKind.Super: {
+      const body = expr.body as ast.ExprSuper;
+      const depth = this.locals.get(expr);
+      assert(depth != null);
+
+      const parent = this.env.getAt(depth, "super");
+      assert(parent != null);
+      assert(parent instanceof Klass);
+
+      const obj = this.env.getAt(depth - 1, "this");
+      assert(obj instanceof Instance);
+
+      const method = parent.findMethod(body.method.lex);
+
+      if (!method) {
+        throw new RuntimeError(
+          body.method,
+          `Undefined property '${body.method.lex}'.`
+        );
+      }
+
+      return method.bind(obj);
+    }
+
     default: assert(false);
     }
   }
@@ -316,8 +358,7 @@ class Fun {
         if (this.isInit) return this.closure.getAt(0, "this");
         return err.value;
       } else {
-        console.error("Unknown Error during return from a function:", err);
-        process.exit(1);
+        throw err;
       }
     }
 
@@ -342,7 +383,8 @@ class Klass {
 
   constructor(
       public name: string,
-      public methods: Map<string, Fun>
+      public methods: Map<string, Fun>,
+      public parent: Klass|null
   ) {}
 
   invoke(i: Interpreter, args: unknown[]): Instance {
@@ -358,7 +400,14 @@ class Klass {
   }
 
   findMethod(name: string): Fun|null {
-    return this.methods.get(name) ?? null;
+    let m = this.methods.get(name);
+    if (m) return m;
+
+    if (this.parent) {
+      return this.parent.findMethod(name);
+    }
+
+    return null;
   }
 
   toString(): string {

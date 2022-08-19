@@ -52,3 +52,31 @@ class A {
 }
 
 print A().sum();
+
+class Parent {
+  init() {
+    this.name = "Parent";
+  }
+
+  say() {
+    print "I am from Parent | this.name = " + this.name;
+  }
+}
+
+class Child < Parent {
+  init() {
+    this.name = "Child";
+  }
+
+  say() {
+    super.say();
+    print "I am from Child | this.name = " + this.name;
+  }
+}
+
+Parent().say();
+Child().say();
+
+// Runtime error
+var NotAClass = "I am totally not a class";
+class Subclass < NotAClass {}
