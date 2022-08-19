@@ -74,7 +74,7 @@ export class Interpreter {
 
     case ast.StmtKind.Fun: {
       const body = s.body as ast.StmtFun;
-      const fun = new Fun(body, this.env);
+      const fun = new Fun(body, this.env, false);
       this.env.define(body.name.lex, fun);
     } break;
 
@@ -93,7 +93,7 @@ export class Interpreter {
       const methods = new Map<string, Fun>();
       for (const methodExpr of body.methods) {
         const m = methodExpr.body as ast.StmtFun;
-        const fn = new Fun(m, this.env);
+        const fn = new Fun(m, this.env, m.name.lex === "init");
         methods.set(m.name.lex, fn);
       }
       const klass = new Klass(body.token.lex, methods);
@@ -295,7 +295,8 @@ class Fun {
 
   constructor(
       public decl: ast.StmtFun,
-      public closure: Env
+      public closure: Env,
+      public isInit: boolean
   ) {
     this.arity = this.decl.params.length;
   }
@@ -312,6 +313,7 @@ class Fun {
       i.executeBlock(this.decl.body, env);
     } catch (err) {
       if (err instanceof Return) {
+        if (this.isInit) return this.closure.getAt(0, "this");
         return err.value;
       } else {
         console.error("Unknown Error during return from a function:", err);
@@ -319,13 +321,15 @@ class Fun {
       }
     }
 
+    if (this.isInit) return this.closure.getAt(0, "this");
+
     return null;
   }
 
   bind(inst: Instance): Fun {
     const env = new Env(this.closure);
     env.define("this", inst);
-    return new Fun(this.decl, env);
+    return new Fun(this.decl, env, this.isInit);
   }
 
   toString(): string {
@@ -342,9 +346,14 @@ class Klass {
   ) {}
 
   invoke(i: Interpreter, args: unknown[]): Instance {
-    assert(i);
-    assert(args);
     const inst = new Instance(this);
+    const init = this.findMethod("init");
+
+    if (init) {
+      this.arity = init.arity;
+      init.bind(inst).invoke(i, args);
+    }
+
     return inst;
   }
 

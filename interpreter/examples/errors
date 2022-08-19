@@ -16,3 +16,11 @@ fun notMethod() {
 }
 
 notMethod();
+
+class A {
+  init() {
+    return 5 + 3;
+  }
+}
+
+var a = A();

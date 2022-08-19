@@ -7,7 +7,8 @@ import { reportError } from "./main.js";
 enum FunKind {
   None = 0,
   Fun,
-  Method
+  Method,
+  Init
 }
 
 enum ClassKind {
@@ -76,7 +77,15 @@ export class Resolver {
       if (this.currFunKind === FunKind.None) {
         reportError(body.token.line, "Can't return from top-level code");
       }
-      if (body.value) this.resolveExpr(body.value);
+      if (body.value) {
+        if (this.currFunKind === FunKind.Init) {
+          reportError(
+            body.token.line,
+            "Can't return a value from an initializer."
+          );
+        }
+        this.resolveExpr(body.value);
+      }
     } break;
 
     case ast.StmtKind.While: {
@@ -98,8 +107,9 @@ export class Resolver {
       this.scopes.at(-1)!.set("this", true);
 
       for (const methodExpr of body.methods) {
-        const decl = FunKind.Method;
-        this.resolveFun(methodExpr.body as ast.StmtFun, decl);
+        const body = methodExpr.body as ast.StmtFun;
+        const decl = body.name.lex === "init" ? FunKind.Init : FunKind.Method;
+        this.resolveFun(body, decl);
       }
 
       this.endScope();

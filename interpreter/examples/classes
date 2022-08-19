@@ -39,3 +39,16 @@ class Cake {
 var cake = Cake();
 cake.flavor = "German chocolate";
 cake.taste();
+
+class A {
+  init() {
+    this.var_1 = 5;
+    this.var_2 = 3;
+  }
+
+  sum() {
+    return this.var_1 + this.var_2;
+  }
+}
+
+print A().sum();
