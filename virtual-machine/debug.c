@@ -10,6 +10,19 @@ static size_t simple_instruction(const char *name, size_t offset)
   return offset + 1;
 }
 
+static size_t const_instruction(const char *name,
+                                struct chunk *c,
+                                size_t offset)
+{
+  byte constant = c->code[offset + 1];
+
+  printf("%-16s %4d '", name, constant);
+  print_word(c->constants.values[constant]);
+  printf("'\n");
+
+  return offset + 2;
+}
+
 void disasm_chunk(struct chunk *c, char *name)
 {
   printf("== %s ==\n", name);
@@ -26,6 +39,8 @@ size_t disasm_instruction(struct chunk *c, size_t offset)
   switch (inst) {
   case OP_RET:
     return simple_instruction("OP_RET", offset);
+  case OP_CONST:
+    return const_instruction("OP_CONST", c, offset);
 
   default:
     printf("Unknown opcode %d\n", inst);
