@@ -7,6 +7,8 @@
 
 void *reallocate(void *ptr, size_t old_cap, size_t new_cap)
 {
+  (void) old_cap;
+
   if (new_cap == 0) {
     free(ptr);
     return NULL;

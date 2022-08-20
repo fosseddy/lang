@@ -32,13 +32,13 @@ void disasm_chunk(struct chunk *c, char *name)
 
 size_t disasm_inst(struct chunk *c, size_t offset)
 {
-  printf("%04d ", offset);
+  printf("%04ld ", offset);
   uint8_t inst = c->code[offset];
 
   if (offset > 0 && c->lines[offset] == c->lines[offset - 1]) {
     printf("   | ");
   } else {
-    printf("%4d ", c->lines[offset]);
+    printf("%4ld ", c->lines[offset]);
   }
 
   switch (inst) {

@@ -5,6 +5,7 @@
 #include "vm.h"
 #include "chunk.h"
 #include "value.h"
+#include "compiler.h"
 #include "debug.h"
 
 static void stack_push(struct vm *vm, double v)
@@ -26,6 +27,14 @@ void vm_init(struct vm *vm)
 
 void vm_free(struct vm *vm)
 {
+  (void) vm;
+}
+
+enum exec_result vm_interpret(struct vm *vm, char *src)
+{
+  (void) vm;
+  compile(src);
+  return EXEC_OK;
 }
 
 enum exec_result vm_execute(struct vm *vm, struct chunk *c)

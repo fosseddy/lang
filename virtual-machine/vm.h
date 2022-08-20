@@ -24,5 +24,6 @@ enum exec_result {
 void vm_init(struct vm *vm);
 void vm_free(struct vm *vm);
 enum exec_result vm_execute(struct vm *vm, struct chunk *c);
+enum exec_result vm_interpret(struct vm *vm, char *src);
 
 #endif

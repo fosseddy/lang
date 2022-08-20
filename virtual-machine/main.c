@@ -3,48 +3,66 @@
 // @TODO(art): add OP_CONST_LONG instruction
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 
 #include "vm.h"
 #include "chunk.h"
 #include "debug.h"
 
-int main(void)
+static char *read_src(char *path)
+{
+  FILE *f = fopen(path, "r");
+  if (f == NULL) {
+    fprintf(stderr, "%s\n", strerror(errno));
+    exit(1);
+  }
+
+  fseek(f, 0, SEEK_END);
+  size_t file_size = (size_t) ftell(f);
+  rewind(f);
+
+  char *buf = malloc(sizeof(char) * file_size + 1);
+  if (buf == NULL) {
+    fprintf(stderr, "%s\n", strerror(errno));
+    exit(1);
+  }
+
+  size_t read = fread(buf, sizeof(char), file_size, f);
+  if (file_size != read) {
+    fprintf(stderr, "Could not read file.\n");
+    exit(1);
+  }
+
+  buf[file_size] = '\0';
+  fclose(f);
+
+  return buf;
+}
+
+static void execFile(struct vm *vm, char *path)
+{
+  char *src = read_src(path);
+  enum exec_result res = vm_interpret(vm, src);
+  free(src);
+
+  if (res == EXEC_COMPILE_ERR) exit(1);
+  if (res == EXEC_RUNTIME_ERR) exit(1);
+}
+
+int main(int argc, char **argv)
 {
   static struct vm vm = {0};
   vm_init(&vm);
 
-  struct chunk c;
-  chunk_init(&c);
+  if (argc == 2) {
+    execFile(&vm, argv[1]);
+  } else {
+    fprintf(stderr, "Usage: main [SCRIPT]\n");
+    exit(1);
+  }
 
-  chunk_put(&c, OP_CONST, 1);
-  chunk_put(&c, chunk_put_const(&c, 2), 1);
-  chunk_put(&c, OP_CONST, 1);
-  chunk_put(&c, chunk_put_const(&c, 4), 1);
-  chunk_put(&c, OP_ADD, 1);
-
-  chunk_put(&c, OP_CONST, 2);
-  chunk_put(&c, chunk_put_const(&c, 1), 2);
-  chunk_put(&c, OP_SUB, 2);
-
-  chunk_put(&c, OP_CONST, 3);
-  chunk_put(&c, chunk_put_const(&c, 3), 3);
-  chunk_put(&c, OP_MUL, 3);
-
-  chunk_put(&c, OP_CONST, 4);
-  chunk_put(&c, chunk_put_const(&c, 1), 4);
-  chunk_put(&c, OP_SUB, 4);
-
-  chunk_put(&c, OP_CONST, 5);
-  chunk_put(&c, chunk_put_const(&c, 7), 5);
-  chunk_put(&c, OP_DIV, 5);
-  chunk_put(&c, OP_NEG, 5);
-
-  chunk_put(&c, OP_RET, 6);
-
-  vm_execute(&vm, &c);
-
-  chunk_free(&c);
   vm_free(&vm);
-
   return 0;
 }
