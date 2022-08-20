@@ -1,5 +1,5 @@
-#ifndef value_h
-#define value_h
+#ifndef VALUE_H
+#define VALUE_H
 
 #include <stddef.h>
 

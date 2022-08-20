@@ -13,10 +13,10 @@ int main(void)
   chunk_init(&c);
 
   chunk_put(&c, OP_CONST, 1);
-  chunk_put(&c, chunk_add_const(&c, 69), 1);
+  chunk_put(&c, chunk_put_const(&c, 69), 1);
 
   chunk_put(&c, OP_CONST, 1);
-  chunk_put(&c, chunk_add_const(&c, 420), 1);
+  chunk_put(&c, chunk_put_const(&c, 420), 1);
 
   chunk_put(&c, OP_RET, 2);
 

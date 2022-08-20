@@ -37,7 +37,7 @@ void chunk_free(struct chunk *c)
   chunk_init(c);
 }
 
-size_t chunk_add_const(struct chunk *c, double value)
+size_t chunk_put_const(struct chunk *c, double value)
 {
   value_array_put(&c->consts, value);
   return c->consts.size - 1;

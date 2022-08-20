@@ -1,5 +1,5 @@
-#ifndef chunk_h
-#define chunk_h
+#ifndef CHUNK_H
+#define CHUNK_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -24,6 +24,6 @@ struct chunk {
 void chunk_init(struct chunk *c);
 void chunk_put(struct chunk *c, uint8_t byte, size_t line);
 void chunk_free(struct chunk *c);
-size_t chunk_add_const(struct chunk *c, double value);
+size_t chunk_put_const(struct chunk *c, double value);
 
 #endif
