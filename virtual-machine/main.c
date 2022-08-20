@@ -1,3 +1,7 @@
+// @TODO(art): create Makefile
+// @TODO(art): implement run-length encoding for lines
+// @TODO(art): add OP_CONST_LONG instruction
+
 #include <stdio.h>
 
 #include "chunk.h"
