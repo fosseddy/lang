@@ -6,24 +6,22 @@
 
 #include "value.h"
 
-typedef uint8_t byte;
-
 enum op_code {
   OP_CONST,
   OP_RET
 };
 
 struct chunk {
-  byte *code;
+  uint8_t *code;
   size_t size;
   size_t cap;
 
-  struct word_array constants;
+  struct value_array consts;
 };
 
 void chunk_init(struct chunk *c);
-void chunk_write(struct chunk *c, byte b);
+void chunk_write(struct chunk *c, uint8_t b);
 void chunk_free(struct chunk *c);
-size_t chunk_add_constant(struct chunk *c, word value);
+size_t chunk_add_const(struct chunk *c, double value);
 
 #endif

@@ -3,17 +3,16 @@
 
 #include <stddef.h>
 
-typedef double word;
-
-struct word_array {
-  word *values;
+struct value_array {
+  double *values;
   size_t size;
   size_t cap;
 };
 
-void word_array_init(struct word_array *a);
-void word_array_write(struct word_array *a, word w);
-void word_array_free(struct word_array *a);
-void print_word(word value);
+void value_array_init(struct value_array *a);
+void value_array_write(struct value_array *a, double v);
+void value_array_free(struct value_array *a);
+
+void value_print(double v);
 
 #endif

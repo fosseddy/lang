@@ -9,10 +9,10 @@ int main(void)
   chunk_init(&c);
 
   chunk_write(&c, OP_CONST);
-  chunk_write(&c, chunk_add_constant(&c, 69));
+  chunk_write(&c, chunk_add_const(&c, 69));
 
   chunk_write(&c, OP_CONST);
-  chunk_write(&c, chunk_add_constant(&c, 420));
+  chunk_write(&c, chunk_add_const(&c, 420));
 
   chunk_write(&c, OP_RET);
 

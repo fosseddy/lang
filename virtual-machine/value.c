@@ -3,31 +3,31 @@
 #include "value.h"
 #include "memory.h"
 
-void word_array_init(struct word_array *a)
+void value_array_init(struct value_array *a)
 {
   a->size = 0;
   a->cap = 0;
   a->values = NULL;
 }
 
-void word_array_write(struct word_array *a, word w)
+void value_array_write(struct value_array *a, double w)
 {
   if (a->size + 1 > a->cap) {
     size_t old_cap = a->cap;
     a->cap = GROW_CAPACITY(old_cap);
-    a->values = GROW_ARRAY(word, a->values, old_cap, a->cap);
+    a->values = GROW_ARRAY(double, a->values, old_cap, a->cap);
   }
 
   a->values[a->size++] = w;
 }
 
-void word_array_free(struct word_array *a)
+void value_array_free(struct value_array *a)
 {
-  FREE_ARRAY(word, a->values, a->cap);
-  word_array_init(a);
+  FREE_ARRAY(double, a->values, a->cap);
+  value_array_init(a);
 }
 
-void print_word(word value)
+void value_print(double v)
 {
-  printf("%g", value);
+  printf("%g", v);
 }
