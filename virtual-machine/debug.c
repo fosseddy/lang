@@ -42,10 +42,20 @@ size_t disasm_inst(struct chunk *c, size_t offset)
   }
 
   switch (inst) {
-  case OP_RET:
-    return simple_inst("OP_RET", offset);
   case OP_CONST:
     return const_inst("OP_CONST", c, offset);
+  case OP_ADD:
+    return simple_inst("OP_ADD", offset);
+  case OP_SUB:
+    return simple_inst("OP_SUB", offset);
+  case OP_MUL:
+    return simple_inst("OP_MUL", offset);
+  case OP_DIV:
+    return simple_inst("OP_DIV", offset);
+  case OP_NEG:
+    return simple_inst("OP_NEG", offset);
+  case OP_RET:
+    return simple_inst("OP_RET", offset);
 
   default:
     printf("Unknown opcode %d\n", inst);

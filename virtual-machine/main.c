@@ -17,8 +17,29 @@ int main(void)
   chunk_init(&c);
 
   chunk_put(&c, OP_CONST, 1);
-  chunk_put(&c, chunk_put_const(&c, 1.2), 1);
-  chunk_put(&c, OP_RET, 2);
+  chunk_put(&c, chunk_put_const(&c, 2), 1);
+  chunk_put(&c, OP_CONST, 1);
+  chunk_put(&c, chunk_put_const(&c, 4), 1);
+  chunk_put(&c, OP_ADD, 1);
+
+  chunk_put(&c, OP_CONST, 2);
+  chunk_put(&c, chunk_put_const(&c, 1), 2);
+  chunk_put(&c, OP_SUB, 2);
+
+  chunk_put(&c, OP_CONST, 3);
+  chunk_put(&c, chunk_put_const(&c, 3), 3);
+  chunk_put(&c, OP_MUL, 3);
+
+  chunk_put(&c, OP_CONST, 4);
+  chunk_put(&c, chunk_put_const(&c, 1), 4);
+  chunk_put(&c, OP_SUB, 4);
+
+  chunk_put(&c, OP_CONST, 5);
+  chunk_put(&c, chunk_put_const(&c, 7), 5);
+  chunk_put(&c, OP_DIV, 5);
+  chunk_put(&c, OP_NEG, 5);
+
+  chunk_put(&c, OP_RET, 6);
 
   vm_execute(&vm, &c);
 

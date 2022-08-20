@@ -8,6 +8,11 @@
 
 enum op_code {
   OP_CONST = 0,
+  OP_ADD,
+  OP_SUB,
+  OP_MUL,
+  OP_DIV,
+  OP_NEG,
   OP_RET
 };
 

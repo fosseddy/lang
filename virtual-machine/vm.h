@@ -5,9 +5,14 @@
 
 #include "chunk.h"
 
+#define STACK_CAP 256
+
 struct vm {
   struct chunk *chunk;
   uint8_t *ip;
+
+  double stack[STACK_CAP];
+  double *sp;
 };
 
 enum exec_result {
