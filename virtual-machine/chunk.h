@@ -7,7 +7,7 @@
 #include "value.h"
 
 enum op_code {
-  OP_CONST,
+  OP_CONST = 0,
   OP_RET
 };
 
