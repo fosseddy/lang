@@ -10,7 +10,7 @@ void value_array_init(struct value_array *a)
   a->values = NULL;
 }
 
-void value_array_write(struct value_array *a, double w)
+void value_array_put(struct value_array *a, double w)
 {
   if (a->size + 1 > a->cap) {
     size_t old_cap = a->cap;

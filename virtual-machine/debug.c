@@ -35,6 +35,12 @@ size_t disasm_inst(struct chunk *c, size_t offset)
   printf("%04d ", offset);
   uint8_t inst = c->code[offset];
 
+  if (offset > 0 && c->lines[offset] == c->lines[offset - 1]) {
+    printf("   | ");
+  } else {
+    printf("%4d ", c->lines[offset]);
+  }
+
   switch (inst) {
   case OP_RET:
     return simple_inst("OP_RET", offset);
