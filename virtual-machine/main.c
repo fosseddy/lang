@@ -29,8 +29,8 @@ static char *read_src(char *path)
     exit(1);
   }
 
-  size_t read = fread(buf, sizeof(char), file_size, f);
-  if (file_size != read) {
+  size_t n = fread(buf, sizeof(char), file_size, f);
+  if (file_size != n) {
     fprintf(stderr, "Could not read file.\n");
     exit(1);
   }
@@ -41,7 +41,7 @@ static char *read_src(char *path)
   return buf;
 }
 
-static void execFile(struct vm *vm, char *path)
+static void exec_file(struct vm *vm, char *path)
 {
   char *src = read_src(path);
   enum exec_result res = vm_interpret(vm, src);
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
   vm_init(&vm);
 
   if (argc == 2) {
-    execFile(&vm, argv[1]);
+    exec_file(&vm, argv[1]);
   } else {
     fprintf(stderr, "Usage: main [SCRIPT]\n");
     exit(1);

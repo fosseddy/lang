@@ -1,0 +1,5 @@
+var x = 5;
+
+var sum = x + 32;
+
+var str = "hello, world";
