@@ -1,6 +1,10 @@
 #ifndef COMPILER_H
 #define COMPILER_H
 
-void compile(char *src);
+#include <stdbool.h>
+
+#include "chunk.h"
+
+bool compiler_compile(char *src, struct chunk *c);
 
 #endif

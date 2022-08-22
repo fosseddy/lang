@@ -32,16 +32,25 @@ void vm_free(struct vm *vm)
 
 enum exec_result vm_interpret(struct vm *vm, char *src)
 {
-  (void) vm;
-  compile(src);
-  return EXEC_OK;
-}
+  struct chunk c;
+  chunk_init(&c);
 
-enum exec_result vm_execute(struct vm *vm, struct chunk *c)
-{
-  vm->chunk = c;
+  if (!compiler_compile(src, &c)) {
+    chunk_free(&c);
+    return EXEC_COMPILE_ERR;
+  }
+
+  vm->chunk = &c;
   vm->ip = vm->chunk->code;
 
+  enum exec_result res = vm_execute(vm);
+
+  chunk_free(&c);
+  return res;
+}
+
+enum exec_result vm_execute(struct vm *vm)
+{
   for (;;) {
     // @NOTE(art): DEBUG
     printf("          ");
