@@ -2,10 +2,26 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
 
 #include "compiler.h"
 #include "chunk.h"
 #include "scanner.h"
+
+enum precedence {
+  PREC_NONE = 0,
+  PREC_ASSIGN,
+  PREC_OR,
+  PREC_AND,
+  PREC_EQ,
+  PREC_COMP,
+  PREC_TERM,
+  PREC_FACTOR,
+  PREC_UNARY,
+  PREC_CALL,
+  PREC_PRIMARY
+};
 
 struct parser {
   struct token curr;
@@ -46,10 +62,6 @@ static void advance()
   }
 }
 
-static void expression()
-{
-}
-
 static void consume(enum token_kind kind, char *err_msg)
 {
   if (parser.curr.kind == kind) {
@@ -72,6 +84,72 @@ static void emit_byte(uint8_t b) {
 static void emit_byte2(uint8_t b1, uint8_t b2) {
   emit_byte(b1);
   emit_byte(b2);
+}
+
+static uint8_t make_const(double val)
+{
+  size_t idx = chunk_put_const(chunk(), val);
+  if (idx > UINT8_MAX) {
+    report_err(&parser.curr, "Too many constants in one chunk.");
+    return 0;
+  }
+
+  return (uint8_t) idx;
+}
+
+static void emit_const(double val)
+{
+  emit_byte2(OP_CONST, make_const(val));
+}
+
+static void parse_precedence(enum precedence prec)
+{
+  (void) prec;
+}
+
+static void number()
+{
+  double val = strtod(parser.prev.start, NULL);
+  emit_const(val);
+}
+
+static void expression()
+{
+  parse_precedence(PREC_ASSIGN);
+}
+
+static void group()
+{
+  expression();
+  consume(TOKEN_RPAREN, "Expect ')' after expression.");
+}
+
+static void unary()
+{
+  parse_precedence(PREC_UNARY);
+  enum token_kind kind = parser.prev.kind;
+
+  expression();
+
+  switch (kind) {
+  case TOKEN_MINUS: emit_byte(OP_NEG); break;
+  default: assert(0);
+  }
+}
+
+static void binary()
+{
+  enum token_kind kind = parser.prev.kind;
+  struct parse_rule *rule = get_rule(kind);
+  parse_precedence(rule->prec + 1);
+
+  switch (kind) {
+  case TOKEN_PLUS: emit_byte(OP_ADD); break;
+  case TOKEN_MINUS: emit_byte(OP_SUB); break;
+  case TOKEN_STAR: emit_byte(OP_MUL); break;
+  case TOKEN_SLASH: emit_byte(OP_DIV); break;
+  default: assert(0);
+  }
 }
 
 bool compiler_compile(char *src, struct chunk *c)

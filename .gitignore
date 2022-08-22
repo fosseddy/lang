@@ -1,2 +1,3 @@
 interpreter/node_modules
 interpreter/build
+virtual-machine/main
