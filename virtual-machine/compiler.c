@@ -15,6 +15,7 @@ struct parser {
 };
 
 static struct parser parser = {0};
+static struct chunk *curr_chunk = {0};
 
 static void report_err(struct token *t, char *msg)
 {
@@ -59,10 +60,25 @@ static void consume(enum token_kind kind, char *err_msg)
   report_err(&parser.curr, err_msg);
 }
 
+static struct chunk *chunk()
+{
+  return curr_chunk;
+}
+
+static void emit_byte(uint8_t b) {
+  chunk_put(chunk(), b, parser.prev.line);
+}
+
+static void emit_byte2(uint8_t b1, uint8_t b2) {
+  emit_byte(b1);
+  emit_byte(b2);
+}
+
 bool compiler_compile(char *src, struct chunk *c)
 {
   scanner_init(src);
 
+  curr_chunk = c;
   parser.had_err = false;
   parser.panic = false;
 
@@ -70,5 +86,6 @@ bool compiler_compile(char *src, struct chunk *c)
   expression();
   consume(TOKEN_EOF, "Expect end of expression.");
 
+  emit_byte(OP_RET);
   return !parser.had_err;
 }
