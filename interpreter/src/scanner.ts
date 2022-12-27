@@ -161,11 +161,8 @@ export class Scanner {
     return c;
   }
 
-  addToken(
-      kind: TokenKind,
-      lit: number|string|null = null,
-      lexeme?: string
-  ): void {
+  addToken(kind: TokenKind, lit: number|string|null = null,
+           lexeme?: string): void {
     this.tokens.push(
       new Token(
         kind,
